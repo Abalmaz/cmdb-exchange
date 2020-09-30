@@ -13,5 +13,8 @@ class Transfer:
         return data
 
     @staticmethod
-    def export(filename=None, schema=None, **kwargs):
-        pass
+    def export(data, filename=None, schema=None, **kwargs):
+        extension = Path(filename).suffix[1:]
+        fmt = EXTENSIONS[extension]
+        csv_file = fmt.export_set(data=data, filename=filename, schema=schema)
+        return csv_file
