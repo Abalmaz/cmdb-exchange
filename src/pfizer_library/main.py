@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from src.pfizer_parser.constants import EXTENSIONS
+from src.pfizer_library.constants import EXTENSIONS
 
 
 class Transfer:
