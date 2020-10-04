@@ -1,5 +1,9 @@
 from csv import DictReader, DictWriter
 
+from marshmallow import ValidationError
+
+from src.pfizer_library.utils import flatten_data
+
 
 class CSVFormatReader(DictReader):
     schema = None
@@ -33,11 +37,15 @@ class CSVFormatWriter(DictWriter):
             fieldnames = list(self.schema._declared_fields)
         DictWriter.__init__(self, f, fieldnames, *args, **kwargs)
 
-    def writerow(self, rowdict):
+    def writerows(self, rowdict):
         if self.schema:
-            data = self.schema.dump(rowdict)
-            rowdict = data
-        return DictWriter.writerow(self, rowdict)
+            data, errors = self.schema.dump(rowdict)
+            if errors:
+                if any(k != v for k, v in rowdict.items()):
+                    raise ValidationError(errors, data=data)
+            else:
+                rowdict = data
+        return DictWriter.writerows(self, rowdict)
 
     def writeheader(self):
         header = dict(zip(self.fieldnames, self.fieldnames))
@@ -70,14 +78,11 @@ class CSVFormat:
         return dset
 
     @classmethod
-    def export_set(cls, data, filename, schema=None, fields=None,  **kwargs):
+    def export_set(cls, data, filename, schema=None, fieldnames=None,  **kwargs):
         writer_cls = CSVFormatWriter
         if schema:
             writer_cls = CSVFormatWriter.export_from_schema(schema)
         with open(filename, 'w') as f:
-            fieldnames = fields
-            writer = writer_cls(f, fieldnames=fieldnames, **kwargs)
-            writer.writeheader()
-            for line in data:
-                writer.writerow(line)
-
+            writer = writer_cls(f, fieldnames)
+            flatt_data = flatten_data(data)
+            writer.writerows(flatt_data)
