@@ -1,6 +1,5 @@
 from csv import DictReader, DictWriter
 
-from marshmallow import ValidationError
 
 from src.pfizer_library.utils import flatten_data
 
@@ -29,37 +28,6 @@ class CSVFormatReader(DictReader):
         )
 
 
-class CSVFormatWriter(DictWriter):
-    schema = None
-
-    def __init__(self, f, fieldnames=None, *args, **kwargs):
-        if fieldnames is None and self.schema is not None:
-            fieldnames = list(self.schema._declared_fields)
-        DictWriter.__init__(self, f, fieldnames, *args, **kwargs)
-
-    def writerows(self, rowdict):
-        if self.schema:
-            data, errors = self.schema.dump(rowdict)
-            if errors:
-                if any(k != v for k, v in rowdict.items()):
-                    raise ValidationError(errors, data=data)
-            else:
-                rowdict = data
-        return DictWriter.writerows(self, rowdict)
-
-    def writeheader(self):
-        header = dict(zip(self.fieldnames, self.fieldnames))
-        DictWriter.writerow(self, header)
-
-    @classmethod
-    def export_from_schema(cls, schema):
-        return type(
-            "CSVFormatWriter",
-            (cls, object),
-            {"schema": schema}
-        )
-
-
 class CSVFormat:
     title = 'csv'
     extensions = ('csv',)
@@ -78,11 +46,15 @@ class CSVFormat:
         return dset
 
     @classmethod
-    def export_set(cls, data, filename, schema=None, fieldnames=None,  **kwargs):
-        writer_cls = CSVFormatWriter
+    def export_set(cls, data, filename, many=True,
+                   schema=None, fieldnames=None, **kwargs):
+        writer_cls = DictWriter
         if schema:
-            writer_cls = CSVFormatWriter.export_from_schema(schema)
+            serialized_data = schema.dump(data, many=many)
+            data = serialized_data
         with open(filename, 'w') as f:
-            writer = writer_cls(f, fieldnames)
             flatt_data = flatten_data(data)
+            if fieldnames is None:
+                fieldnames = flatt_data[0].keys()
+            writer = writer_cls(f, fieldnames)
             writer.writerows(flatt_data)

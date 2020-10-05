@@ -17,11 +17,12 @@ class Transfer:
         return data
 
     @staticmethod
-    def export(data, filename=None, schema=None, fieldnames=None, **kwargs):
+    def export(data, filename=None, schema=None, fieldnames=None, many=True, **kwargs):
         extension = Path(filename).suffix[1:]
         fmt = EXTENSIONS[extension]
         csv_file = fmt.export_set(data=data,
                                   filename=filename,
                                   schema=schema,
-                                  fieldnames=fieldnames)
+                                  fieldnames=fieldnames,
+                                  many=many)
         return csv_file
