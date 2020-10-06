@@ -1,28 +1,32 @@
 from pathlib import Path
 
 from src.pfizer_library.constants import EXTENSIONS
+from src.pfizer_library.exceptions import UnsupportedFormat
+
+
+def get_extension(filename=None):
+    extension = Path(filename).suffix[1:]
+    try:
+        fmt = EXTENSIONS[extension]
+    except KeyError:
+        raise UnsupportedFormat(f'Format {extension} '
+                                f'cannot be exported.')
+    return fmt
 
 
 class Transfer:
     @staticmethod
-    def get_extension(filename=None):
-        return Path(filename).suffix[1:]
+    def load(filename=None, schema=None, **kwargs):
+        fmt = get_extension(filename)
+        return fmt.import_set(filename=filename, schema=schema)
 
     @staticmethod
-    def load(file=None, schema=None, **kwargs):
-        # TODO raise exception if format did not find
-        extension = Path(file).suffix[1:]
-        fmt = EXTENSIONS[extension]
-        data = fmt.import_set(file, schema)
-        return data
+    def export(data, filename=None, schema=None,
+               fieldnames=None, many=True, **kwargs):
+        fmt = get_extension(filename)
 
-    @staticmethod
-    def export(data, filename=None, schema=None, fieldnames=None, many=True, **kwargs):
-        extension = Path(filename).suffix[1:]
-        fmt = EXTENSIONS[extension]
-        csv_file = fmt.export_set(data=data,
-                                  filename=filename,
-                                  schema=schema,
-                                  fieldnames=fieldnames,
-                                  many=many)
-        return csv_file
+        return fmt.export_set(data=data,
+                              filename=filename,
+                              schema=schema,
+                              fieldnames=fieldnames,
+                              many=many)
