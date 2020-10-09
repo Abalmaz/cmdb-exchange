@@ -1,9 +1,9 @@
 import pytest
 
-from src.pfizer_library.exceptions import UnsupportedFormat
-from src.pfizer_library.formats import CSVFormat
-from src.pfizer_library.main import get_extension, Transfer
-from src.pfizer_library.utils import flatten_data
+from src.cmdb_exchange.exceptions import UnsupportedFormat
+from src.cmdb_exchange.formats.csv import CSVFormat
+from src.cmdb_exchange.main import get_extension, CmdbExchange
+from src.cmdb_exchange.utils import flatten_data
 
 
 def test_flatten_data(nested_data):
@@ -30,5 +30,5 @@ def test_get_csv_format():
 
 
 def test_transfer_csv_load(nested_data):
-    assert Transfer.export(data=nested_data, filename='test.csv') == \
+    assert CmdbExchange.export(data=nested_data, filename='test.csv') == \
            CSVFormat.export_set(data=nested_data, filename='test.csv')

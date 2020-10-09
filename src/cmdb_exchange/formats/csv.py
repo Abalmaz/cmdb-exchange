@@ -1,7 +1,7 @@
 from csv import DictReader, DictWriter
 
 
-from src.pfizer_library.utils import flatten_data
+from src.cmdb_exchange.utils import flatten_data
 
 
 class CSVFormatReader(DictReader):
