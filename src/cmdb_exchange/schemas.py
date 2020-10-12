@@ -60,6 +60,6 @@ class EnvironmentSchemas(Schema):
 
 
 class MasterSchema(Schema):
-    ciid = fields.Str()
+    master_ciid = fields.Str()
     application = fields.Str()
     environments = fields.Nested(EnvironmentSchemas, many=True)

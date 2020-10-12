@@ -7,8 +7,8 @@ from src.cmdb_exchange.formats.csv import CSVFormat
 class Registry:
     _formats = OrderedDict()
 
-    def register(self, key, format_or_path):
-        self._formats[key] = format_or_path
+    def register(self, key, format):
+        self._formats[key] = format
 
     def register_builtins(self):
         self.register('csv', CSVFormat())
@@ -20,3 +20,4 @@ class Registry:
 
 
 registry = Registry()
+registry.register_builtins()

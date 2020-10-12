@@ -1,3 +1,6 @@
+import csv
+import fileinput
+from contextlib import contextmanager
 from csv import DictReader, DictWriter
 
 
@@ -33,6 +36,21 @@ class CSVFormat:
     extensions = ('csv',)
 
     @classmethod
+    def get_column_name(cls, filename):
+        with open(filename) as f:
+            d_reader = csv.DictReader(f)
+            headers = d_reader.fieldnames
+        return headers
+
+    @classmethod
+    def get_data(cls, filename):
+        with open(filename) as f:
+            csvreader = csv.reader(f)
+            parsed_csv = list(csvreader)
+            data_rows = parsed_csv[1:]  # discard column names
+        return data_rows
+
+    @classmethod
     def import_set(cls, filename, schema=None, **kwargs):
         dset = []
         with open(filename) as f:
@@ -58,3 +76,11 @@ class CSVFormat:
                 fieldnames = flatt_data[0].keys()
             writer = writer_cls(f, fieldnames)
             writer.writerows(flatt_data)
+
+    @contextmanager
+    def open(self, filepath, mode='r', newline=''):
+        f = fileinput.input(files=filepath, openhook=fileinput.hook_encoded("utf-8-sig"))
+        try:
+            yield f
+        finally:
+            f.close()
