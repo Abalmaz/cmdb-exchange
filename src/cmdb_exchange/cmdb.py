@@ -14,18 +14,21 @@ class CmdbExchange:
         fmt = registry.get_format(format)
         if command and not hasattr(fmt, command):
             raise UnsupportedFormat(f'Format {format} cannot be exported.')
+        return fmt
 
     @classmethod
     def create_importer(cls, format, build_schema, **kwargs):
         json_struct = build_schema.get_structure()
         mapping_column = build_schema.get_mapping_column()
-        return Importer(format, json_struct,
+        fmt = cls.get_format(format)
+        return Importer(fmt, json_struct,
                         mapping_column,
                         build_schema.schema)
 
     @classmethod
     def create_exporter(cls, format, schema=None, many=True, **kwargs):
-        return Exporter(format=format,
+        fmt = cls.get_format(format)
+        return Exporter(format=fmt,
                         schema=schema,
                         many=many,
                         **kwargs)
@@ -34,7 +37,7 @@ class CmdbExchange:
 class Importer:
 
     def __init__(self, format, structure, mapping_column, schema):
-        self.format = registry.get_format(format)
+        self.format = format
         self.structure = structure
         self.mapping_column = mapping_column
         self.schema = schema
@@ -85,9 +88,6 @@ class Exporter:
         self.schema = schema
         self.many = many
 
-    def get_format_class(self):
-        return registry.get_format(self.format)
-
     def export(self, filename, data, fieldnames=None):
         if self.schema:
             serialized_data = self.schema.dump(data, many=self.many)
@@ -96,4 +96,4 @@ class Exporter:
         if fieldnames is None:
             fieldnames = flatt_data[0].keys()
 
-        return self.get_format_class().export_set(filename, flatt_data, fieldnames)
+        return self.format.export_set(filename, flatt_data, fieldnames)
