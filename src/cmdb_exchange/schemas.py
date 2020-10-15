@@ -1,6 +1,20 @@
 from marshmallow import Schema, fields
 
 
+class PersonTypeSchema(Schema):
+    type = fields.Str()
+
+
+class PersonSchema(Schema):
+    name = fields.Str()
+    phone = fields.Str()
+    email = fields.Email()
+    id = fields.Str()
+    status = fields.Str()
+    comments = fields.Str()
+    type = fields.Nested(PersonTypeSchema)
+
+
 class RiskProfileSchema(Schema):
     iprm_id = fields.Int()
     cpr_type = fields.Str()
