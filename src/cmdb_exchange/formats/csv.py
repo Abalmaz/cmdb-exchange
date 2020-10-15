@@ -1,4 +1,5 @@
-from csv import DictReader
+import csv
+from csv import DictReader, DictWriter
 
 
 class CSVFormatReader(DictReader):
@@ -30,9 +31,23 @@ class CSVFormat:
     extensions = ('csv',)
 
     @classmethod
-    def import_set(cls, file_name, schema=None, **kwargs):
+    def get_column_name(cls, filename):
+        with open(filename) as f:
+            d_reader = csv.DictReader(f)
+            headers = d_reader.fieldnames
+        return headers
+
+    @classmethod
+    def get_data(cls, steam):
+        csvreader = csv.reader(steam)
+        parsed_csv = list(csvreader)
+        data_rows = parsed_csv[1:]  # discard column names
+        return data_rows
+
+    @classmethod
+    def import_set(cls, filename, schema=None, **kwargs):
         dset = []
-        with open(file_name) as f:
+        with open(filename) as f:
             if schema:
                 reader = CSVFormatReader.import_from_schema(schema)
                 rows = reader(f, **kwargs)
@@ -43,5 +58,8 @@ class CSVFormat:
         return dset
 
     @classmethod
-    def export_set(cls, **kwargs):
-        pass
+    def export_set(cls, filename, data, fieldnames, **kwargs):
+        writer_cls = DictWriter
+        with open(filename, 'w') as f:
+            writer = writer_cls(f, fieldnames)
+            writer.writerows(data)
