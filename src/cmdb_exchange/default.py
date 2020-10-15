@@ -1,29 +1,19 @@
-import copy
-
 from marshmallow.fields import Nested
 
 
 class CmdbItemBuilder:
+    """
+     Generate recursively-nested JSON structure from the schema
+     for upload flatten data from a file.
+    """
     def __init__(self, schema):
         self.schema = schema
-        self.delimiters = "."
 
-    def populate_structure_with_data(self, structure, column_names, data_rows):
-        json_struct = []
-        num_columns = len(column_names)
-        mapping = self.get_leaves(self.schema)
-        for row in data_rows:
-            json_row = copy.deepcopy(structure)
-            i = 0
-            while i < num_columns:
-                cell = row[i]
-                column_name = column_names[i]
-                key_path = mapping[column_name]
-                command = f"json_row{key_path}=\"{cell}\""
-                exec(command)
-                i += 1
-            json_struct.append(json_row)
-        return json_struct
+    def get_structure(self):
+        return self.generate_json_structure(self.schema)
+
+    def get_mapping_column(self):
+        return self.get_leaves(self.schema)
 
     def generate_json_structure(self, schema):
         schema = schema._declared_fields
@@ -49,9 +39,9 @@ class CmdbItemBuilder:
         return structure
 
     def get_leaves(self, schema, path="", result={}):
-        for k, v in schema._declared_fields.items():
-            if type(v) is Nested:
-                self.get_leaves(v.nested, f"{path}['{k}']", result)
+        for key, value in schema._declared_fields.items():
+            if type(value) is Nested:
+                self.get_leaves(value.nested, f"{path}['{key}']", result)
             else:
-                result[k] = f"{path}['{k}']"
+                result[key] = f"{path}['{key}']"
         return result

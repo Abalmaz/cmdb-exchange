@@ -1,10 +1,5 @@
 import csv
-import fileinput
-from contextlib import contextmanager
 from csv import DictReader, DictWriter
-
-
-from src.cmdb_exchange.utils import flatten_data
 
 
 class CSVFormatReader(DictReader):
@@ -43,11 +38,10 @@ class CSVFormat:
         return headers
 
     @classmethod
-    def get_data(cls, filename):
-        with open(filename) as f:
-            csvreader = csv.reader(f)
-            parsed_csv = list(csvreader)
-            data_rows = parsed_csv[1:]  # discard column names
+    def get_data(cls, steam):
+        csvreader = csv.reader(steam)
+        parsed_csv = list(csvreader)
+        data_rows = parsed_csv[1:]  # discard column names
         return data_rows
 
     @classmethod
@@ -64,23 +58,8 @@ class CSVFormat:
         return dset
 
     @classmethod
-    def export_set(cls, data, filename, many=True,
-                   schema=None, fieldnames=None, **kwargs):
+    def export_set(cls, filename, data, fieldnames, **kwargs):
         writer_cls = DictWriter
-        if schema:
-            serialized_data = schema.dump(data, many=many)
-            data = serialized_data
         with open(filename, 'w') as f:
-            flatt_data = flatten_data(data)
-            if fieldnames is None:
-                fieldnames = flatt_data[0].keys()
             writer = writer_cls(f, fieldnames)
-            writer.writerows(flatt_data)
-
-    @contextmanager
-    def open(self, filepath, mode='r', newline=''):
-        f = fileinput.input(files=filepath, openhook=fileinput.hook_encoded("utf-8-sig"))
-        try:
-            yield f
-        finally:
-            f.close()
+            writer.writerows(data)
