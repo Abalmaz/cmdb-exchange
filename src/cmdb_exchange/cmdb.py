@@ -1,6 +1,9 @@
 import copy
 import fileinput
 from contextlib import contextmanager
+from pprint import pprint
+
+from marshmallow import ValidationError
 
 from src.cmdb_exchange.exceptions import UnsupportedFormat
 from src.cmdb_exchange.formats import registry
@@ -53,8 +56,12 @@ class Importer:
         result = []
         data_rows = self.format.get_data(steam)
         json_row = self.get_json_row(data_rows)
-        for row in json_row:
-            result.append(self.schema.load(row))
+        for i, row in enumerate(json_row):
+            try:
+                result.append(self.schema.load(row))
+            except ValidationError as err:
+                print(f"Validation error in row number {i+1}:")
+                pprint(err.messages)
         return result
 
     def get_json_row(self, data_rows):
