@@ -7,17 +7,16 @@ class CSVFormat:
     extensions = ('csv',)
 
     @classmethod
-    def get_column_name(cls, filename):
-        with open(filename) as f:
-            d_reader = csv.DictReader(f)
-            headers = d_reader.fieldnames
+    def get_column_name(cls, steam):
+        csvreader = csv.reader(steam)
+        headers = next(csvreader)
         return headers
 
     @classmethod
     def get_data(cls, steam):
         csvreader = csv.reader(steam)
         parsed_csv = list(csvreader)
-        data_rows = parsed_csv[1:]  # discard column names
+        data_rows = parsed_csv
         return data_rows
 
     @classmethod

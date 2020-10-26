@@ -6,7 +6,7 @@ class PersonTypeSchema(Schema):
 
 
 class PersonSchema(Schema):
-    name = fields.Str()
+    user_name = fields.Str()
     phone = fields.Str()
     email = fields.Email()
     id = fields.Str()

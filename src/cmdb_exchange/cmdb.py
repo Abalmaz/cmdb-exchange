@@ -1,87 +1,98 @@
 import copy
+
 import fileinput
+import itertools
+import os
 from contextlib import contextmanager
-from pprint import pprint
 
-from marshmallow import ValidationError
+from os import listdir
+from os.path import join
 
-from src.cmdb_exchange.exceptions import UnsupportedFormat
+from typing import Any, Dict, List
+
 from src.cmdb_exchange.formats import registry
-from src.cmdb_exchange.utils import flatten_data
-
-
-class CmdbExchange:
-
-    @classmethod
-    def get_format(cls, format, command=None):
-        fmt = registry.get_format(format)
-        if command and not hasattr(fmt, command):
-            raise UnsupportedFormat(f'Format {format} cannot be exported.')
-        return fmt
-
-    @classmethod
-    def create_importer(cls, format, build_schema, **kwargs):
-        json_struct = build_schema.get_structure()
-        mapping_column = build_schema.get_mapping_column()
-        fmt = cls.get_format(format)
-        return Importer(fmt, json_struct,
-                        mapping_column,
-                        build_schema.schema)
-
-    @classmethod
-    def create_exporter(cls, format, schema=None, many=True, **kwargs):
-        fmt = cls.get_format(format)
-        return Exporter(format=fmt,
-                        schema=schema,
-                        many=many,
-                        **kwargs)
+from src.cmdb_exchange.utils import flatten_data, get_parent_keys, \
+    sorted_list_of_dicts_by_key, combine_rows
 
 
 class Importer:
+    """ This is a class handling data from files and translate it to a single
+    standardized Python data structure object.
+    """
 
-    def __init__(self, format, structure, mapping_column, schema):
+    def __init__(self,
+                 format: Any,
+                 structure: Dict,
+                 mapping_column: Dict) -> None:
+        """
+
+        :param format: a class object for work with the given file extension
+        :type format: Any
+        :param structure: a dictionary describing the data structure
+                          according to the schema
+        :type structure: Dict
+        :param mapping_column: mapping column name and place in the structure
+        :type mapping_column: Dict
+        """
         self.format = format
         self.structure = structure
         self.mapping_column = mapping_column
-        self.schema = schema
-        self.column_names = list(mapping_column.keys())
-        self._num_columns = 0
+        self.result = []
 
-    @property
-    def num_columns(self):
-        self._num_columns = len(self.column_names)
-        return self._num_columns
-
-    def push(self, steam):
-        result = []
+    def push(self, steam: Any) -> List:
+        headers = self.format.get_column_name(steam)
         data_rows = self.format.get_data(steam)
-        json_row = self.get_json_row(data_rows)
-        for i, row in enumerate(json_row):
-            try:
-                result.append(self.schema.load(row))
-            except ValidationError as err:
-                print(f"Validation error in row number {i+1}:")
-                pprint(err.messages)
+        struct_data = self.get_data_by_structure(headers, data_rows)
+        result = self.get_single_object_from_data(struct_data)
         return result
 
-    def get_json_row(self, data_rows):
-        json_struct = []
+    def get_single_object_from_data(self, data):
+        keys = get_parent_keys(data[0])
+        sorted_data = sorted_list_of_dicts_by_key(data, keys)
+        visited, result = [], []
+        first, second = {}, {}
+        for a, b in itertools.combinations(sorted_data, 2):
+            if a not in visited and b not in visited:
+                first, second = combine_rows(a, b)
+                if second:
+                    result.append(a)
+                    visited.append(a)
+                else:
+                    visited.append(b)
+
+        result.append(second) if second else result.append(first)
+        return result
+
+    def get_data_by_structure(self, headers, data_rows):
+        result = []
         for row in data_rows:
-            json_row = copy.deepcopy(self.structure)
+            template_dict = copy.deepcopy(self.structure)
             i = 0
-            while i < self.num_columns:
+            while i < len(headers):
                 cell = row[i]
-                column_name = self.column_names[i]
+                column_name = headers[i]
                 key_path = self.mapping_column[column_name]
-                command = f"json_row{key_path}=\"{cell}\""
+                command = f"template_dict{key_path}=\"{cell}\""
                 exec(command)
                 i += 1
-            json_struct.append(json_row)
-        return json_struct
+            result.append(template_dict)
+        return result
+
+    def open_dir(self, path):
+        if os.path.isdir(path):
+            allfiles = [f for f in listdir(path) if os.path.isfile(join(path, f))]
+            join_data = []
+            for file in allfiles:
+                fullpath = os.path.join(path, file)
+                with open(fullpath) as f:
+                    data = self.push(f)
+                    join_data = join_data + data
+        result = self.get_single_object_from_data(join_data)
+        return result
 
     @contextmanager
-    def open(self, filepath, mode='r', newline=''):
-        f = fileinput.input(files=filepath,
+    def open(self, path, mode='r', newline=''):
+        f = fileinput.input(files=path,
                             openhook=fileinput.hook_encoded("utf-8-sig"))
         try:
             yield f
@@ -104,3 +115,37 @@ class Exporter:
             fieldnames = flatt_data[0].keys()
 
         return self.format.export_set(filename, flatt_data, fieldnames)
+
+
+class CmdbExchange:
+    """
+
+    """
+
+    @classmethod
+    def get_format(cls, format: str) -> Any:
+        """
+        :param format: type of file extension
+        :type format: str
+        :return:  class object to `format`.
+        :rtype: class object
+        """
+        return registry.get_format(format)
+
+    @classmethod
+    def create_importer(cls,
+                        format: str,
+                        build_schema: Any,
+                        **kwargs: Any) -> Importer:
+        structure = build_schema.get_structure()
+        mapping_column = build_schema.get_mapping_column()
+        fmt = cls.get_format(format)
+        return Importer(fmt, structure, mapping_column)
+
+    @classmethod
+    def create_exporter(cls, format, schema=None, many=True, **kwargs):
+        fmt = cls.get_format(format)
+        return Exporter(format=fmt,
+                        schema=schema,
+                        many=many,
+                        **kwargs)

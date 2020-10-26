@@ -63,7 +63,7 @@ def test_importer_get_json_row(csv_upload_file, schema, python_nested_data):
     importer = CmdbExchange.create_importer('csv', CmdbItemBuilder(schema))
     with importer.open(csv_upload_file) as f:
         data_rows = importer.format.get_data(f)
-        actual = importer.get_json_row(data_rows)
+        actual = importer.get_data_by_structure(data_rows)
     expected = python_nested_data
     assert actual == expected
 
