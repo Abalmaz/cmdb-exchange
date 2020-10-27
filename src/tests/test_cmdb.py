@@ -7,18 +7,6 @@ from src.cmdb_exchange.formats import CSVFormat
 from src.cmdb_exchange.utils import flatten_data
 
 
-def test_flatten_data(nested_data):
-    flatted_data = [
-        {'master_id': 123, 'id': 111, 'name': 'Web Server', 'status': 'Run', 'GxP': True},
-        {'master_id': 123, 'id': 112, 'name': 'Web Server', 'status': 'New', 'GxP': True},
-        {'master_id': 123, 'id': 113, 'name': 'Web Server', 'status': 'Run', 'GxP': False},
-        {'master_id': 456, 'id': 211, 'name': 'Mobile app', 'status': 'Build', 'GxP': True},
-        {'master_id': 456, 'id': 212, 'name': 'Mobile app', 'status': 'Run', 'GxP': True},
-        {'master_id': 456, 'id': 213, 'name': 'Mobile app', 'status': 'Run', 'GxP': True}
-    ]
-    assert flatted_data == flatten_data(nested_data)
-
-
 def test_get_wrong_format():
     with pytest.raises(UnsupportedFormat):
         CmdbExchange.get_format('aaa')
@@ -26,18 +14,18 @@ def test_get_wrong_format():
 
 def test_get_structure(schema):
     actual = CmdbItemBuilder(schema).get_structure()
-    expected = {'master_ciid': 'master_ciid',
-                'application': 'application',
-                'environments': {'ciid': 'ciid',
-                                  'deployment_name': 'deployment_name',
-                                  'description': 'description',
-                                  'env_type': 'env_type',
-                                  'risk_profile': {'gxp': 'gxp',
-                                                   'iprm_id': 'iprm_id',
-                                                   'sdlc_path': 'sdlc_path',
-                                                   'soc_value': 'soc_value'},
-                                  'status': 'status',
-                                  'url': 'url'}
+    expected = {'master_ciid': '',
+                'application': '',
+                'environments': {'ciid': '',
+                                  'deployment_name': '',
+                                  'description': '',
+                                  'env_type': '',
+                                  'risk_profile': {'gxp': '',
+                                                   'iprm_id': '',
+                                                   'sdlc_path': '',
+                                                   'soc_value': ''},
+                                  'status': '',
+                                  'url': ''}
                 }
     assert actual == expected
 
@@ -59,11 +47,14 @@ def test_get_mapping_column(schema):
     assert actual == expected
 
 
-def test_importer_get_json_row(csv_upload_file, schema, python_nested_data):
+def test_importer_get_data_by_structure(csv_upload_file,
+                                        schema,
+                                        python_nested_data):
     importer = CmdbExchange.create_importer('csv', CmdbItemBuilder(schema))
     with importer.open(csv_upload_file) as f:
+        headers = importer.format.get_column_name(f)
         data_rows = importer.format.get_data(f)
-        actual = importer.get_data_by_structure(data_rows)
+        actual = importer.get_data_by_structure(headers, data_rows)
     expected = python_nested_data
     assert actual == expected
 

@@ -12,7 +12,7 @@ from typing import Any, Dict, List
 
 from src.cmdb_exchange.formats import registry
 from src.cmdb_exchange.utils import flatten_data, get_parent_keys, \
-    sorted_list_of_dicts_by_key, combine_rows
+    sorted_list_of_dicts_by_key, combine_many_nested_fields
 
 
 class Importer:
@@ -53,7 +53,7 @@ class Importer:
         first, second = {}, {}
         for a, b in itertools.combinations(sorted_data, 2):
             if a not in visited and b not in visited:
-                first, second = combine_rows(a, b)
+                first, second = combine_many_nested_fields(a, b)
                 if second:
                     result.append(a)
                     visited.append(a)
@@ -80,7 +80,8 @@ class Importer:
 
     def open_dir(self, path):
         if os.path.isdir(path):
-            allfiles = [f for f in listdir(path) if os.path.isfile(join(path, f))]
+            allfiles = [f for f in listdir(path)
+                        if os.path.isfile(join(path, f))]
             join_data = []
             for file in allfiles:
                 fullpath = os.path.join(path, file)

@@ -15,8 +15,7 @@ class CSVFormat:
     @classmethod
     def get_data(cls, steam):
         csvreader = csv.reader(steam)
-        parsed_csv = list(csvreader)
-        data_rows = parsed_csv
+        data_rows = list(csvreader)
         return data_rows
 
     @classmethod
