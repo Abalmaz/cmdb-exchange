@@ -10,8 +10,9 @@ from os.path import join
 
 from typing import Any, Dict, List
 
-from src.cmdb_exchange.formats import registry
-from src.cmdb_exchange.utils import flatten_data, get_parent_keys, \
+from ..cmdb_exchange.formats import registry
+from ..cmdb_exchange.parser import FlatDataParser
+from ..cmdb_exchange.utils import get_parent_keys, \
     sorted_list_of_dicts_by_key, combine_many_nested_fields
 
 
@@ -101,52 +102,28 @@ class Importer:
             f.close()
 
 
-class Exporter:
-    def __init__(self, format, schema, many):
-        self.format = format
-        self.schema = schema
-        self.many = many
-
-    def export(self, filename, data, fieldnames=None):
-        if self.schema:
-            serialized_data = self.schema.dump(data, many=self.many)
-            data = serialized_data
-        flatt_data = flatten_data(data)
-        if fieldnames is None:
-            fieldnames = flatt_data[0].keys()
-
-        return self.format.export_set(filename, flatt_data, fieldnames)
-
-
 class CmdbExchange:
     """
 
     """
 
-    @classmethod
-    def get_format(cls, format: str) -> Any:
-        """
-        :param format: type of file extension
-        :type format: str
-        :return:  class object to `format`.
-        :rtype: class object
-        """
-        return registry.get_format(format)
+    _builder = None
+    _format = None
 
-    @classmethod
-    def create_importer(cls,
-                        format: str,
-                        build_schema: Any,
-                        **kwargs: Any) -> Importer:
-        structure = build_schema.get_structure()
-        mapping_column = build_schema.get_mapping_column()
-        fmt = cls.get_format(format)
-        return Importer(fmt, structure, mapping_column)
+    def create_importer(self, format: str, builder: Any) -> None:
+        self._builder = builder
+        self._format = registry.get_format(format)
 
-    @classmethod
-    def create_exporter(cls, format, schema=None, many=True, **kwargs):
-        fmt = cls.get_format(format)
-        return Exporter(format=fmt,
-                        schema=schema,
-                        many=many,
-                        **kwargs)
+    def create_exporter(self, format: str) -> None:
+        self._format = registry.get_format(format)
+
+    def prepare_data_for_export(self, data):
+        parser = FlatDataParser()
+        parser.visit(data)
+        return parser.result
+
+    def pull(self, filename, data, fieldnames=None):
+        flat_data = self.prepare_data_for_export(data)
+        if fieldnames is None:
+            fieldnames = flat_data[0].keys()
+        return self._format.export_set(filename, flat_data, fieldnames)
