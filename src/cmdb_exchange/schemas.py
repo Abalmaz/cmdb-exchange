@@ -1,4 +1,18 @@
-from marshmallow import Schema, fields
+from marshmallow import Schema, fields, validate,  pre_load, validates_schema, ValidationError
+
+
+class PersonTypeSchema(Schema):
+    type = fields.Str()
+
+
+class PersonSchema(Schema):
+    user_name = fields.Str()
+    phone = fields.Str()
+    email = fields.Email()
+    id = fields.Str()
+    status = fields.Str()
+    comments = fields.Str()
+    type = fields.Nested(PersonTypeSchema)
 
 
 class RiskProfileSchema(Schema):
@@ -30,12 +44,28 @@ class RiskProfileSchema(Schema):
     globals = fields.Bool()
     is_auth = fields.Str()
 
+    @pre_load
+    def set_sdlc_path(self, data, **kwargs):
+        if data['sdlc_path'] == '':
+            data['sdlc_path'] = 'Baseline'
+        return data
 
-class EnvironmentSchemas(Schema):
+    @pre_load
+    def set_iprm_id(self, data, **kwargs):
+        data['iprm_id'] = data['iprm_id'][0:7]
+        return data
+
+    @validates_schema
+    def validate_sox_value(self, data, **kwargs):
+        if data["sdlc_path"] == "Validation" and data["sox_value"] is False:
+            raise ValidationError("If 'SDLC path' is 'Validation' 'Sox value' must be True")
+
+
+class EnvironmentSchema(Schema):
     ciid = fields.Str()
     name = fields.Str()
     description = fields.Str()
-    status = fields.Str()
+    status = fields.Str(validate=validate.OneOf(["New", "Build", "Run", "Decommisioned"]))
     env_type = fields.Str()
     app_deployment_type = fields.Str()
     location = fields.Str()
@@ -58,8 +88,14 @@ class EnvironmentSchemas(Schema):
     cookies_stored = fields.Bool()
     customer_into_stored = fields.Bool()
 
+    @pre_load
+    def set_business_critical(self, data, **kwargs):
+        if data['business_critical'] == '':
+            data['business_critical'] = True
+        return data
+
 
 class MasterSchema(Schema):
     master_ciid = fields.Str()
     application = fields.Str()
-    environments = fields.Nested(EnvironmentSchemas, many=True)
+    environments = fields.Nested(EnvironmentSchema, many=True)
