@@ -1,15 +1,10 @@
-from abc import abstractmethod, ABCMeta
+class Builder:
 
-
-class Builder(metaclass=ABCMeta):
-
-    @abstractmethod
     def build_structure(self) -> None:
-        pass
+        raise NotImplementedError
 
-    @abstractmethod
     def build_item(self) -> None:
-        pass
+        raise NotImplementedError
 
 
 class CmdbItemBuilder(Builder):

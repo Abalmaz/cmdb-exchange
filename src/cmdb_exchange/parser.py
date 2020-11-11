@@ -16,13 +16,20 @@ class FlatDataParser(Parser):
 
     def __init__(self):
         self._collected_info = {}
-        self.result = []
+        self._collected_list = []
         self.key = ''
+
+    @property
+    def result(self):
+        if self._collected_list:
+            return self._collected_list
+        else:
+            return [self._collected_info]
 
     def visit_list(self, node) -> None:
         for k, v in enumerate(node):
             self.visit(v)
-            self.result.append(deepcopy(self._collected_info))
+            self._collected_list.append(deepcopy(self._collected_info))
 
     def visit_dict(self, node) -> None:
         for key, value in node.items():

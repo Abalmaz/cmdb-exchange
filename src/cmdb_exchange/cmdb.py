@@ -107,15 +107,18 @@ class CmdbExchange:
 
     """
 
-    _builder = None
-    _format = None
+    def __init__(self, builder: Any = None,
+                 format: Any = None) -> None:
+        self._builder = builder
+        self._format = format
 
     def create_importer(self, format: str, builder: Any) -> None:
         self._builder = builder
         self._format = registry.get_format(format)
 
-    def create_exporter(self, format: str) -> None:
-        self._format = registry.get_format(format)
+    @classmethod
+    def create_exporter(cls, format: str) -> object:
+        return cls(format=registry.get_format(format))
 
     def prepare_data_for_export(self, data):
         parser = FlatDataParser()
@@ -123,7 +126,14 @@ class CmdbExchange:
         return parser.result
 
     def pull(self, filename, data, fieldnames=None):
-        flat_data = self.prepare_data_for_export(data)
-        if fieldnames is None:
-            fieldnames = flat_data[0].keys()
+        fieldnames = ('application', 'master_ciid', 'ciid', 'deployment_name', 'description',
+                      'env_type', 'status',
+                      'url', 'gxp', 'iprm_id', 'sdlc_path', 'baseline', 'soc_value')
+
+        flat_data = []
+        for item in data:
+            parent_keys = get_parent_keys(item)
+            keys = item.keys() | parent_keys
+            order_item = {key: item[key] for key in keys}
+            flat_data.extend(self.prepare_data_for_export(order_item))
         return self._format.export_set(filename, flat_data, fieldnames)
