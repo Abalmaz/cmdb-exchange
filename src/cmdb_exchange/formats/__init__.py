@@ -1,7 +1,7 @@
 from collections import OrderedDict
 
 from src.cmdb_exchange.exceptions import UnsupportedFormat
-from src.cmdb_exchange.formats.csv import CSVFormat
+from src.cmdb_exchange.formats.formats import CSVFormat
 
 
 class Registry:

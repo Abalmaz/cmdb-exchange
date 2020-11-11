@@ -2,9 +2,20 @@ import csv
 from csv import DictWriter
 
 
-class CSVFormat:
-    title = 'csv'
-    extensions = ('csv',)
+class Format:
+
+    def get_column_name(self, data):
+        raise NotImplementedError
+
+    def get_data(self, data):
+        raise NotImplementedError
+
+    @classmethod
+    def export_s0et0(cls, *args, **kwargs):
+        raise NotImplementedError
+
+
+class CSVFormat(Format):
 
     @classmethod
     def get_column_name(cls, steam):
@@ -23,4 +34,5 @@ class CSVFormat:
         writer_cls = DictWriter
         with open(filename, 'w') as f:
             writer = writer_cls(f, fieldnames)
+            writer.writeheader()
             writer.writerows(data)
