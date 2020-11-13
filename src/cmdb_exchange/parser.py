@@ -44,3 +44,8 @@ class FlatDataParser(Parser):
 
     def visit_bool(self, node) -> None:
         self._collected_info[self.key] = node
+
+
+class EnvironmentsUserFileParser:
+    def result(self):
+        pass
