@@ -21,10 +21,7 @@ class FlatDataParser(Parser):
 
     @property
     def result(self):
-        if self._collected_list:
-            return self._collected_list
-        else:
-            return [self._collected_info]
+        return self._collected_list or [self._collected_info]
 
     def visit_list(self, node) -> None:
         for item in node:
@@ -52,10 +49,7 @@ class EnvironmentUserFileParser:
 
     def parse(self, data):
         for row in data:
-            envs = row.get('environments')
-            for env in envs:
-                parse_data = self._parse(env)
-                self.result.append(parse_data)
+            self.result = [self._parse(env) for env in row.get('environments')]
         return self.result
 
     def _parse(self, data):
@@ -67,9 +61,7 @@ class MasterUserFileParser:
     keys = ['master_ciid', 'application', 'users']
 
     def parse(self, data):
-        for row in data:
-            master = self._parse(row)
-            self.result.append(master)
+        self.result = [self._parse(row) for row in data]
         return self.result
 
     def _parse(self, data):
