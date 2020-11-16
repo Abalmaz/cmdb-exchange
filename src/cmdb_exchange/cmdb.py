@@ -102,38 +102,30 @@ class Importer:
             f.close()
 
 
+class Exporter:
+    def __init__(self, format, builder):
+        self._format = format
+        self._builder = builder
+
+    def export(self, path,  data):
+        data_for_export = self._builder.prepare_data(data)
+        file_name = path + self._builder.file_name + '.'+self._format.title
+        self._format.export_set(filename=file_name,
+                                data=data_for_export,
+                                fieldnames=self._builder.fields.keys(),
+                                headers=self._builder.fields)
+
+
 class CmdbExchange:
     """
 
     """
-
-    def __init__(self, builder: Any = None,
-                 format: Any = None) -> None:
-        self._builder = builder
-        self._format = format
 
     def create_importer(self, format: str, builder: Any) -> None:
         self._builder = builder
         self._format = registry.get_format(format)
 
     @classmethod
-    def create_exporter(cls, format: str) -> object:
-        return cls(format=registry.get_format(format))
-
-    def prepare_data_for_export(self, data):
-        parser = FlatDataParser()
-        parser.visit(data)
-        return parser.result
-
-    def pull(self, filename, data, fieldnames=None):
-        fieldnames = ('application', 'master_ciid', 'ciid', 'deployment_name', 'description',
-                      'env_type', 'status',
-                      'url', 'gxp', 'iprm_id', 'sdlc_path', 'baseline', 'soc_value')
-
-        flat_data = []
-        for item in data:
-            parent_keys = get_parent_keys(item)
-            keys = item.keys() | parent_keys
-            order_item = {key: item[key] for key in keys}
-            flat_data.extend(self.prepare_data_for_export(order_item))
-        return self._format.export_set(filename, flat_data, fieldnames)
+    def create_exporter(cls, format: str, builder: Any) -> object:
+        return Exporter(format=registry.get_format(format),
+                        builder=builder)

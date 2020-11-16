@@ -1,4 +1,5 @@
-from marshmallow import Schema, fields, validate,  pre_load, validates_schema, ValidationError
+from marshmallow import Schema, fields, validate,  pre_load, \
+    validates_schema, ValidationError
 
 
 class PersonTypeSchema(Schema):
@@ -13,6 +14,15 @@ class PersonSchema(Schema):
     status = fields.Str()
     comments = fields.Str()
     type = fields.Nested(PersonTypeSchema)
+
+
+class SecuritySchema(Schema):
+    cybersecurity_protection_level = fields.Str()
+    access = fields.Bool()
+    detect = fields.Bool()
+    identify = fields.Bool()
+    prevent = fields.Bool()
+    response = fields.Bool()
 
 
 class RiskProfileSchema(Schema):
@@ -34,12 +44,6 @@ class RiskProfileSchema(Schema):
     aca = fields.Bool()
     smd = fields.Bool()
     data_class = fields.Str()
-    cybersecurity_protection_level = fields.Str()
-    access = fields.Bool()
-    detect = fields.Bool()
-    identify = fields.Bool()
-    prevent = fields.Bool()
-    response = fields.Bool()
     regional = fields.Bool()
     globals = fields.Bool()
     is_auth = fields.Str()
@@ -69,11 +73,8 @@ class EnvironmentSchema(Schema):
     env_type = fields.Str()
     app_deployment_type = fields.Str()
     location = fields.Str()
-    org_level_1 = fields.Str()
-    org_level_2 = fields.Str()
-    org_level_3 = fields.Str()
     business_critical = fields.Bool()
-    iprm_info = fields.Nested(RiskProfileSchema)
+    risk_profile = fields.Nested(RiskProfileSchema)
     used_in_lab = fields.Bool()
     ci_mgmt_group = fields.Str()
     under_change_mgmt = fields.Bool()
@@ -87,6 +88,8 @@ class EnvironmentSchema(Schema):
     daily_monitoring_site = fields.Str()
     cookies_stored = fields.Bool()
     customer_into_stored = fields.Bool()
+    security = fields.Nested(SecuritySchema)
+    users = fields.Nested(PersonSchema, many=True)
 
     @pre_load
     def set_business_critical(self, data, **kwargs):
@@ -98,4 +101,8 @@ class EnvironmentSchema(Schema):
 class MasterSchema(Schema):
     master_ciid = fields.Str()
     application = fields.Str()
+    org_level_1 = fields.Str()
+    org_level_2 = fields.Str()
+    org_level_3 = fields.Str()
     environments = fields.Nested(EnvironmentSchema, many=True)
+    users = fields.Nested(PersonSchema, many=True)

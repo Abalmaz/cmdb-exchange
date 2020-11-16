@@ -17,6 +17,9 @@ class Format:
 
 class CSVFormat(Format):
 
+    title = 'csv'
+    extensions = ('csv',)
+
     @classmethod
     def get_column_name(cls, steam):
         csvreader = csv.reader(steam)
@@ -30,9 +33,9 @@ class CSVFormat(Format):
         return data_rows
 
     @classmethod
-    def export_set(cls, filename, data, fieldnames, **kwargs):
+    def export_set(cls, filename, data, fieldnames, headers, **kwargs):
         writer_cls = DictWriter
         with open(filename, 'w') as f:
             writer = writer_cls(f, fieldnames)
-            writer.writeheader()
+            writer.writerow(headers)
             writer.writerows(data)
