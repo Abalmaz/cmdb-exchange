@@ -11,7 +11,6 @@ from os.path import join
 from typing import Any, Dict, List
 
 from ..cmdb_exchange.formats import registry
-from ..cmdb_exchange.parser import FlatDataParser
 from ..cmdb_exchange.utils import get_parent_keys, \
     sorted_list_of_dicts_by_key, combine_many_nested_fields
 
@@ -21,28 +20,13 @@ class Importer:
     standardized Python data structure object.
     """
 
-    def __init__(self,
-                 format: Any,
-                 structure: Dict,
-                 mapping_column: Dict) -> None:
-        """
-
-        :param format: a class object for work with the given file extension
-        :type format: Any
-        :param structure: a dictionary describing the data structure
-                          according to the schema
-        :type structure: Dict
-        :param mapping_column: mapping column name and place in the structure
-        :type mapping_column: Dict
-        """
-        self.format = format
-        self.structure = structure
-        self.mapping_column = mapping_column
-        self.result = []
+    def __init__(self, format, builder):
+        self._format = format
+        self._builder = builder
 
     def push(self, steam: Any) -> List:
-        headers = self.format.get_column_name(steam)
-        data_rows = self.format.get_data(steam)
+        headers = self._format.get_column_name(steam)
+        data_rows = self._format.get_data(steam)
         struct_data = self.get_data_by_structure(headers, data_rows)
         result = self.get_single_object_from_data(struct_data)
         return result
@@ -121,9 +105,10 @@ class CmdbExchange:
 
     """
 
-    def create_importer(self, format: str, builder: Any) -> None:
-        self._builder = builder
-        self._format = registry.get_format(format)
+    @classmethod
+    def create_importer(cls, format: str, builder: Any) -> object:
+        return Importer(format=registry.get_format(format),
+                        builder=builder)
 
     @classmethod
     def create_exporter(cls, format: str, builder: Any) -> object:

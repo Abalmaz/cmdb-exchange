@@ -1,3 +1,4 @@
+from collections import defaultdict
 from copy import deepcopy
 
 
@@ -43,14 +44,59 @@ class FlatDataParser(Parser):
         self._collected_info[self.key] = node
 
 
+class SchemaKeysParser(Parser):
+    keys = []
+    list_of_keys = {}
+    key = ''
+
+    @property
+    def result(self):
+        return self.list_of_keys
+
+    def visit_Nested(self, node):
+        self.k = self.key
+        self.visit(node.nested._declared_fields)
+
+    def visit_dict(self, node):
+        for key, value in node.items():
+            self.key = key
+            self.visit(value)
+
+    def visit_String(self, node):
+        self.keys.append(self.key)
+
+    def visit_Boolean(self, node):
+        self.keys.append(self.key)
+
+    def visit_Email(self, node):
+        self.keys.append(self.key)
+
+    def visit_Url(self, node):
+        self.keys.append(self.key)
+
+    def visit_Integer(self, node):
+        self.keys.append(self.key)
+
+
 class EnvironmentUserFileParser:
     result = []
-    keys = ['ciid', 'name', 'users']
+
+    def __init__(self, keys):
+        self.keys = keys
 
     def parse(self, data):
         for row in data:
-            self.result = [self._parse(env) for env in row.get('environments')]
+            self._parse_row(row)
         return self.result
+
+    def _parse_row(self, data):
+        env = self._parse(data)
+        users = self._parse_users(data.get('users'))
+        env['users'] = users
+        self.result.append(env)
+
+    def _parse_users(self, users):
+        return [self._parse(user) for user in users]
 
     def _parse(self, data):
         return {key: value for key, value in data.items() if key in self.keys}
@@ -58,11 +104,22 @@ class EnvironmentUserFileParser:
 
 class MasterUserFileParser:
     result = []
-    keys = ['master_ciid', 'application', 'users']
+
+    def __init__(self, keys):
+        self.keys = keys
 
     def parse(self, data):
-        self.result = [self._parse(row) for row in data]
+        self._parse_row(data)
         return self.result
+
+    def _parse_row(self, data):
+        master = self._parse(data)
+        users = self._parse_users(data.get('users'))
+        master['users'] = users
+        self.result.append(master)
+
+    def _parse_users(self, users):
+        return [self._parse(user) for user in users]
 
     def _parse(self, data):
         return {key: value for key, value in data.items() if key in self.keys}
@@ -70,67 +127,15 @@ class MasterUserFileParser:
 
 class CmdbDataFileParser:
     result = []
-    keys = ['ciid',
-            'master_ciid',
-            'application',
-            'name',
-            'description',
-            'status',
-            'env_type',
-            'app_deployment_type',
-            'location',
-            'org_level_1',
-            'org_level_2',
-            'org_level_3',
-            'business_critical',
-            'iprm_id',
-            'cpr_type',
-            'compliance_rating_status',
-            'sdlc_path',
-            'dr_rto_tier',
-            'sox_value',
-            'gxp',
-            'gcp',
-            'gdp',
-            'glp',
-            'gmp',
-            'gpvp',
-            'eea_pi_spi',
-            'ma201',
-            'sales',
-            'aca',
-            'smd',
-            'data_class',
-            'cybersecurity_protection_level',
-            'access',
-            'detect',
-            'identify',
-            'prevent',
-            'response',
-            'regional',
-            'globals',
-            'is_auth',
-            'used_in_lab',
-            'ci_mgmt_group',
-            'under_change_mgmt',
-            'sla_support_id',
-            'primary_url',
-            'key_used_periods',
-            'app_externally_accessible',
-            'externally_hosted_app',
-            'country_solution_hosted_in',
-            'hosting_vendor',
-            'daily_monitoring_site',
-            'cookies_stored',
-            'customer_into_stored'
-            ]
+
+    def __init__(self, keys):
+        self.keys = keys
 
     def parse(self, data):
-        for raw in data:
-           self._parse_raw(raw)
+        self._parse_row(data)
         return self.result
 
-    def _parse_raw(self, data):
+    def _parse_row(self, data):
         master = self._parse(data)
         envs = self._parse_envs(data.get('environments'))
         master['environments'] = envs

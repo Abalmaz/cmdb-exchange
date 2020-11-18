@@ -74,7 +74,6 @@ class EnvironmentSchema(Schema):
     app_deployment_type = fields.Str()
     location = fields.Str()
     business_critical = fields.Bool()
-    risk_profile = fields.Nested(RiskProfileSchema)
     used_in_lab = fields.Bool()
     ci_mgmt_group = fields.Str()
     under_change_mgmt = fields.Bool()
@@ -88,6 +87,7 @@ class EnvironmentSchema(Schema):
     daily_monitoring_site = fields.Str()
     cookies_stored = fields.Bool()
     customer_into_stored = fields.Bool()
+    risk_profile = fields.Nested(RiskProfileSchema)
     security = fields.Nested(SecuritySchema)
     users = fields.Nested(PersonSchema, many=True)
 

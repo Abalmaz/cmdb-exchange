@@ -1,5 +1,5 @@
 from src.cmdb_exchange.cmdb import CmdbExchange
-from src.cmdb_exchange.export import EnvironmentsUserFile, MasterUsersFile, CmdbDataFile
+from src.cmdb_exchange.export import EnvironmentUsersFile, MasterUsersFile, CmdbDataFile
 
 """
 This is example, how export to 'csv' format files from python data.
@@ -212,7 +212,7 @@ example_cmdb_data = [
         2. realize export method with passing folder path where we want to save file and the data
 """
 
-env_user_exporter = CmdbExchange.create_exporter('csv', EnvironmentsUserFile())
+env_user_exporter = CmdbExchange.create_exporter('csv', EnvironmentUsersFile())
 env_user_exporter.export('/home/user/Documents/examples/', example_cmdb_data)
 
 """

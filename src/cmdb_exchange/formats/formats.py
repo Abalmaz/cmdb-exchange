@@ -22,13 +22,13 @@ class CSVFormat(Format):
 
     @classmethod
     def get_column_name(cls, steam):
-        csvreader = csv.reader(steam)
-        headers = next(csvreader)
+        csvreader = csv.DictReader(steam)
+        headers = csvreader.fieldnames
         return headers
 
     @classmethod
     def get_data(cls, steam):
-        csvreader = csv.reader(steam)
+        csvreader = csv.DictReader(steam)
         data_rows = list(csvreader)
         return data_rows
 

@@ -1,6 +1,7 @@
 from collections import OrderedDict
 
-from src.cmdb_exchange.parser import EnvironmentUserFileParser, FlatDataParser, MasterUserFileParser, CmdbDataFileParser
+from src.cmdb_exchange.parser import EnvironmentUserFileParser, \
+    FlatDataParser, MasterUserFileParser, CmdbDataFileParser
 
 
 class DefaultFile:
@@ -20,7 +21,7 @@ class DefaultFile:
         raise NotImplementedError
 
 
-class EnvironmentsUserFile(DefaultFile):
+class EnvironmentUsersFile(DefaultFile):
 
     file_name = 'ContactExportEnvironment'
 
@@ -37,11 +38,12 @@ class EnvironmentsUserFile(DefaultFile):
     ))
 
     def __init__(self):
-        self._parser = EnvironmentUserFileParser()
+        self._parser = EnvironmentUserFileParser(keys=self.fields.keys())
         self._flatten = FlatDataParser()
 
     def get_data(self, data):
-        self._parser.parse(data)
+        for row in data:
+            self._parser.parse(row.get('environments'))
         return self._parser.result
 
     def prepare_data(self, data):
@@ -49,9 +51,6 @@ class EnvironmentsUserFile(DefaultFile):
         for row in nested_data:
             self._flatten.visit(row)
         return self._flatten.result
-
-    def export(self):
-        pass
 
 
 class MasterUsersFile(DefaultFile):
@@ -71,11 +70,12 @@ class MasterUsersFile(DefaultFile):
     ))
 
     def __init__(self):
-        self._parser = MasterUserFileParser()
+        self._parser = MasterUserFileParser(keys=self.fields.keys())
         self._flatten = FlatDataParser()
 
     def get_data(self, data):
-        self._parser.parse(data)
+        for row in data:
+            self._parser.parse(row)
         return self._parser.result
 
     def prepare_data(self, data):
@@ -146,11 +146,12 @@ class CmdbDataFile(DefaultFile):
     ))
 
     def __init__(self):
-        self._parser = CmdbDataFileParser()
+        self._parser = CmdbDataFileParser(keys=self.fields.keys())
         self._flatten = FlatDataParser()
 
     def get_data(self, data):
-        self._parser.parse(data)
+        for row in data:
+            self._parser.parse(row)
         return self._parser.result
 
     def prepare_data(self, data):
