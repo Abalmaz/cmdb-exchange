@@ -17,12 +17,12 @@ class PersonSchema(Schema):
 
 
 class SecuritySchema(Schema):
-    cybersecurity_protection_level = fields.Str()
-    access = fields.Bool()
-    detect = fields.Bool()
-    identify = fields.Bool()
-    prevent = fields.Bool()
-    response = fields.Bool()
+    cybersecurity_protection_level = fields.Str(skip_if=None)
+    access = fields.Bool(skip_if='')
+    detect = fields.Bool(skip_if='')
+    identify = fields.Bool(skip_if='')
+    prevent = fields.Bool(skip_if='')
+    response = fields.Bool(skip_if='')
 
 
 class RiskProfileSchema(Schema):

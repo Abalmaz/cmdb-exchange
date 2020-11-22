@@ -25,10 +25,8 @@ class Importer:
         self._builder = builder
 
     def push(self, steam: Any) -> List:
-        headers = self._format.get_column_name(steam)
-        data_rows = self._format.get_data(steam)
-        struct_data = self.get_data_by_structure(headers, data_rows)
-        result = self.get_single_object_from_data(struct_data)
+        data_rows = self._format.import_set(steam)
+        result = self._builder.get_data(data_rows)
         return result
 
     def get_single_object_from_data(self, data):

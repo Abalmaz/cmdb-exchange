@@ -7,11 +7,13 @@ class Format:
     def get_column_name(self, data):
         raise NotImplementedError
 
-    def get_data(self, data):
+
+    @classmethod
+    def import_set(cls, data):
         raise NotImplementedError
 
     @classmethod
-    def export_s0et0(cls, *args, **kwargs):
+    def export_set(cls, *args, **kwargs):
         raise NotImplementedError
 
 
@@ -27,11 +29,13 @@ class CSVFormat(Format):
         return headers
 
     @classmethod
-    def get_data(cls, steam):
+    def import_set(cls, steam):
         csvreader = csv.DictReader(steam)
         data_rows = list(csvreader)
         return data_rows
 
+
+    #TODO rename
     @classmethod
     def export_set(cls, filename, data, fieldnames, headers, **kwargs):
         writer_cls = DictWriter

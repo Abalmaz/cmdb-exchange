@@ -27,6 +27,11 @@ class CmbdItemBuilder(Builder):
 
     def get_data(self, data):
         self.parse(data)
+        # print(self.result)
+        # for row in self.result:
+        #     print(row)
+        #     self._schema.load(row)
+
         return self.result
 
     def parse(self, data):
@@ -46,7 +51,8 @@ class CmbdItemBuilder(Builder):
 
     def _parse_master(self, data):
         master_keys = self._schema.declared_fields.keys()
-        master = self._parse(data, master_keys)
+        master_data = self._parse(data, master_keys)
+        master = self._schema.load(master_data)
         return master
 
     def _parse_envs(self, envs):

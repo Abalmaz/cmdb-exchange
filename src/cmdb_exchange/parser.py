@@ -27,7 +27,8 @@ class FlatDataParser(Parser):
     def visit_list(self, node) -> None:
         for item in node:
             self.visit(item)
-            self._collected_list.append(deepcopy(self._collected_info))
+            common_row_data = deepcopy(self._collected_info)
+            self._collected_list.append(common_row_data)
 
     def visit_dict(self, node) -> None:
         for key, value in node.items():
