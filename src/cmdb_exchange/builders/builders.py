@@ -1,4 +1,4 @@
-from src.cmdb_exchange.export import CmdbDataFile
+from src.cmdb_exchange.builders.export import CmdbDataFile
 
 
 class Builder:

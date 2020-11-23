@@ -13,7 +13,7 @@ class Format:
         raise NotImplementedError
 
     @classmethod
-    def export_set(cls, *args, **kwargs):
+    def create_file(cls, *args, **kwargs):
         raise NotImplementedError
 
 
@@ -34,10 +34,8 @@ class CSVFormat(Format):
         data_rows = list(csvreader)
         return data_rows
 
-
-    #TODO rename
     @classmethod
-    def export_set(cls, filename, data, fieldnames, headers, **kwargs):
+    def create_file(cls, filename, data, fieldnames, headers, **kwargs):
         writer_cls = DictWriter
         with open(filename, 'w') as f:
             writer = writer_cls(f, fieldnames)

@@ -10,6 +10,7 @@ from os.path import join
 
 from typing import Any, Dict, List
 
+from .builders import builders
 from ..cmdb_exchange.formats import registry
 from ..cmdb_exchange.utils import get_parent_keys, \
     sorted_list_of_dicts_by_key, combine_many_nested_fields
@@ -85,17 +86,20 @@ class Importer:
 
 
 class Exporter:
-    def __init__(self, format, builder):
-        self._format = format
+    def __init__(self, fmt, builder):
+        self._format = fmt
         self._builder = builder
+
+    def get_file_name(self, path):
+        return f'{path}/{self._builder.file_name}.{self._format.title}'
 
     def export(self, path,  data):
         data_for_export = self._builder.prepare_data(data)
-        file_name = path + self._builder.file_name + '.'+self._format.title
-        self._format.export_set(filename=file_name,
-                                data=data_for_export,
-                                fieldnames=self._builder.fields.keys(),
-                                headers=self._builder.fields)
+        file_name = self.get_file_name(path)
+        self._format.create_file(filename=file_name,
+                                 data=data_for_export,
+                                 fieldnames=self._builder.fields.keys(),
+                                 headers=self._builder.fields)
 
 
 class CmdbExchange:
@@ -104,11 +108,11 @@ class CmdbExchange:
     """
 
     @classmethod
-    def create_importer(cls, format: str, builder: Any) -> object:
-        return Importer(format=registry.get_format(format),
+    def create_importer(cls, fmt: str, builder: Any) -> object:
+        return Importer(format=registry.get_format(fmt),
                         builder=builder)
 
     @classmethod
-    def create_exporter(cls, format: str, builder: Any) -> object:
-        return Exporter(format=registry.get_format(format),
-                        builder=builder)
+    def create_exporter(cls, fmt: str, builder: Any) -> object:
+        return Exporter(fmt=registry.get_format(fmt),
+                        builder=builders.get_builder(builder))
