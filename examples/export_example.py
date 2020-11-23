@@ -1,5 +1,6 @@
 from src.cmdb_exchange.cmdb import CmdbExchange
-from src.cmdb_exchange.export import EnvironmentUsersFile, MasterUsersFile, CmdbDataFile
+from src.cmdb_exchange.builders.export import EnvironmentUsersFile, \
+    MasterUsersFile, CmdbDataFile
 
 """
 This is example, how export to 'csv' format files from python data.
@@ -213,14 +214,14 @@ example_cmdb_data = [
 """
 
 env_user_exporter = CmdbExchange.create_exporter('csv', EnvironmentUsersFile())
-env_user_exporter.export('/home/user/Documents/examples/', example_cmdb_data)
+env_user_exporter.export('/home/user/Downloads/examples', example_cmdb_data)
 
 """
     Creating 'csv' file with master's users data
 """
 
 master_user_exporter = CmdbExchange.create_exporter('csv', MasterUsersFile())
-master_user_exporter.export('/home/user/Documents/examples/', example_cmdb_data)
+master_user_exporter.export('/home/user/Downloads/examples', example_cmdb_data)
 
 
 """
@@ -228,4 +229,4 @@ master_user_exporter.export('/home/user/Documents/examples/', example_cmdb_data)
 """
 
 cmdb_data_exporter = CmdbExchange.create_exporter('csv', CmdbDataFile())
-cmdb_data_exporter.export('/home/user/Documents/examples/', example_cmdb_data)
+cmdb_data_exporter.export('/home/user/Downloads/examples', example_cmdb_data)

@@ -1,10 +1,8 @@
 import pytest
 
 from src.cmdb_exchange.default import CmdbItemBuilder
-from src.cmdb_exchange.exceptions import UnsupportedFormat
 from src.cmdb_exchange.cmdb import CmdbExchange
-from src.cmdb_exchange.formats import CSVFormat
-from src.cmdb_exchange.utils import flatten_data
+from src.cmdb_exchange.formats import CSVFormat, registry
 
 
 def test_get_structure(schema):
@@ -53,15 +51,3 @@ def test_get_mapping_column(schema):
 #         actual = importer.get_data_by_structure(headers, data_rows)
 #     expected = python_nested_data
 #     assert actual == expected
-
-
-# def test_export_with_csv_format(tmpdir, nested_data, schema):
-#     file_name = tmpdir.join('file_name.csv')
-#     exporter = CmdbExchange.create_exporter(format='csv')
-#     exporter.pull(file_name, nested_data)
-#     assert exporter.pull(file_name, nested_data) == \
-#            CSVFormat.export_set(data=flatten_data(nested_data), filename=file_name,
-#                                 fieldnames=['application', 'master_id', 'env_type',
-#                                             'name', 'GxP', 'iprm_id',
-#                                             'soc_value', 'sdlc_path', 'url',
-#                                             'description', 'status', 'id'])
