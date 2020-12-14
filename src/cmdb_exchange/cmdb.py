@@ -1,19 +1,8 @@
-import copy
-
-import fileinput
-import itertools
-import os
-from contextlib import contextmanager
-
-from os import listdir
-from os.path import join
-
-from typing import Any, Dict, List
+from typing import Any, Union, List
 
 from .builders import builders
+from .utils import get_file_by_name_pattern
 from ..cmdb_exchange.formats import registry
-from ..cmdb_exchange.utils import get_parent_keys, \
-    sorted_list_of_dicts_by_key, combine_many_nested_fields
 
 
 class Importer:
@@ -21,80 +10,52 @@ class Importer:
     standardized Python data structure object.
     """
 
-    def __init__(self, format, builder):
-        self._format = format
-        self._builder = builder
+    def __init__(self, schema: Any, fmt: Any) -> None:
+        self._schema = schema
+        self._format = fmt
 
-    def push(self, steam: Any) -> List:
-        data_rows = self._format.import_set(steam)
-        result = self._builder.get_data(data_rows)
-        return result
+    def get_data(self, obj_key: str, path: str) -> Union[dict, List[dict]]:
+        builder = builders.get_builder(obj_key)
+        file_name = f'{builder.file_name}.{self._format.title}'
+        file = get_file_by_name_pattern(path, file_name)
+        file_data = self.read_file(file)
+        return builder.import_data(file_data)
 
-    def get_single_object_from_data(self, data):
-        keys = get_parent_keys(data[0])
-        sorted_data = sorted_list_of_dicts_by_key(data, keys)
-        visited, result = [], []
-        first, second = {}, {}
-        for a, b in itertools.combinations(sorted_data, 2):
-            if a not in visited and b not in visited:
-                first, second = combine_many_nested_fields(a, b)
-                if second:
-                    result.append(a)
-                    visited.append(a)
-                else:
-                    visited.append(b)
+    def import_data(self, path: str) -> list:
+        master_users_data = self.get_data('master_contacts', path)
+        env_users_data = self.get_data('env_contacts', path)
+        cmdb_data = self.get_data('cmdb_items', path)
+        for item in cmdb_data:
+            item['users'] = master_users_data.get(item['master_ciid'])
+            for env in item['environments']:
+                env['users'] = env_users_data.get(env['ciid'])
+            print(item)
+            serialize_item = self._schema.load(item)
+            print(serialize_item)
+        # serialize = self._schema.load(cmdb_data)
+        # print(serialize)
+        return cmdb_data
 
-        result.append(second) if second else result.append(first)
-        return result
-
-    def get_data_by_structure(self, headers, data_rows):
-        result = []
-        for row in data_rows:
-            template_dict = copy.deepcopy(self.structure)
-            i = 0
-            while i < len(headers):
-                cell = row[i]
-                column_name = headers[i]
-                key_path = self.mapping_column[column_name]
-                command = f"template_dict{key_path}=\"{cell}\""
-                exec(command)
-                i += 1
-            result.append(template_dict)
-        return result
-
-    def open_dir(self, path):
-        if os.path.isdir(path):
-            allfiles = [f for f in listdir(path)
-                        if os.path.isfile(join(path, f))]
-            join_data = []
-            for file in allfiles:
-                fullpath = os.path.join(path, file)
-                with open(fullpath) as f:
-                    data = self.push(f)
-                    join_data = join_data + data
-        result = self.get_single_object_from_data(join_data)
-        return result
-
-    @contextmanager
-    def open(self, path, mode='r', newline=''):
-        f = fileinput.input(files=path,
-                            openhook=fileinput.hook_encoded("utf-8-sig"))
-        try:
-            yield f
-        finally:
-            f.close()
+    def read_file(self, path: str) -> list:
+        with open(path) as f:
+            read_file = self._format.get_data(f)
+        return read_file
 
 
 class Exporter:
-    def __init__(self, fmt, builder):
+    """
+
+    """
+
+    def __init__(self, fmt: Any, builder: Any) -> None:
         self._format = fmt
         self._builder = builder
 
-    def get_file_name(self, path):
-        return f'{path}/{self._builder.file_name}.{self._format.title}'
+    def get_file_name(self, path: str) -> str:
+        return f'{path}/{self._builder.generate_filename()}.{self._format.title}'
 
-    def export(self, path,  data):
-        data_for_export = self._builder.prepare_data(data)
+    def export(self, path: str,  data: Any) -> None:
+        data_for_export = self._builder.export_data(data)
         file_name = self.get_file_name(path)
         self._format.create_file(filename=file_name,
                                  data=data_for_export,
@@ -108,11 +69,11 @@ class CmdbExchange:
     """
 
     @classmethod
-    def create_importer(cls, fmt: str, builder: Any) -> object:
-        return Importer(format=registry.get_format(fmt),
-                        builder=builder)
+    def create_importer(cls, fmt: str, schema: Any) -> Importer:
+        return Importer(fmt=registry.get_format(fmt),
+                        schema=schema)
 
     @classmethod
-    def create_exporter(cls, fmt: str, builder: Any) -> object:
+    def create_exporter(cls, fmt: str, builder: Any) -> Exporter:
         return Exporter(fmt=registry.get_format(fmt),
-                        builder=builders.get_builder(builder))
+                        builder=builder)

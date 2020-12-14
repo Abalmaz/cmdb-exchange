@@ -1,5 +1,5 @@
-from src.cmdb_exchange.builders.export import EnvironmentUsersFile, \
-    MasterUsersFile, CmdbDataFile
+from src.cmdb_exchange.builders.builders import EnvironmentUsersBuilder, \
+    MasterUsersBuilder, CmdbDataBuilder
 from src.cmdb_exchange.exceptions import NotExistingBuilder
 
 
@@ -7,19 +7,17 @@ class RegistryBuilders:
     def __init__(self):
         self._builders = {}
 
-    def register_builder(self, builder):
-        key = builder.__class__.__name__
+    def register_builder(self, key, builder):
         self._builders[key] = builder
 
-    def get_builder(self, builder, **kwargs):
-        key = builder.__class__.__name__
-        bld = self._builders.get(key)
-        if not bld:
+    def get_builder(self, key):
+        builder = self._builders.get(key)
+        if not builder:
             raise NotExistingBuilder(f"The '{key}' builder does not exist.")
-        return bld
+        return builder
 
 
 builders = RegistryBuilders()
-builders.register_builder(EnvironmentUsersFile())
-builders.register_builder(MasterUsersFile())
-builders.register_builder(CmdbDataFile())
+builders.register_builder('env_contacts', EnvironmentUsersBuilder())
+builders.register_builder('master_contacts', MasterUsersBuilder())
+builders.register_builder('cmdb_items', CmdbDataBuilder())
