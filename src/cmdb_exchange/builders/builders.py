@@ -1,77 +1,161 @@
-from src.cmdb_exchange.builders.export import CmdbDataFile
+from collections import OrderedDict
+from datetime import date
+from typing import Union, List, Any
+
+from src.cmdb_exchange.builders.parsers import FlatDataParser, \
+    CmdbDataFileParser, ContactFileParser
 
 
-class Builder:
-    pass
+class DefaultBuilder:
 
+    @property
+    def file_name(self):
+        raise NotImplementedError
 
-class CmbdItemBuilder(Builder):
+    @property
+    def fields(self):
+        raise NotImplementedError
 
-    result = []
+    def __init__(self):
+        self._flatten = FlatDataParser()
+        self._parser = None
 
-    def __init__(self, schema):
-        self._schema = schema
-        self._file_parser = CmdbDataFile()
+    def get_data(self, data: list) -> list:
+        return self._parser.export_data(data)
 
-    # TODO:
-    def set_correct_keys(self, data):
+    def set_fields_name(self, data: dict) -> dict:
         new_row = {}
-        new_data = []
+        for k, v in self.fields.items():
+            for row_k, row_v in data.items():
+                if row_k == v:
+                    new_row[k] = row_v
+        return new_row
+
+    def export_data(self, data: list) -> Union[list, List[dict]]:
+        nested_data = self.get_data(data)
+        for row in nested_data:
+            self._flatten.visit(row)
+        return self._flatten.result
+
+    def import_data(self, data: list) -> Any:
+        for i, row in enumerate(data):
+            data[i] = self.set_fields_name(row)
+        return self._parser.import_data(data)
+
+    def generate_filename(self) -> str:
+        today = date.today()
+        return self.file_name.replace('*', today.strftime('%Y%m%d'))
+
+
+class EnvironmentUsersBuilder(DefaultBuilder):
+
+    file_name = 'AppSearchContactExport_*_Environment'
+
+    fields = OrderedDict((
+        ('ciid', 'CIID'),
+        ('name', 'Application Name'),
+        ('user_name', 'Contact  Name'),
+        ('type', 'CI Contact Type'),
+        ('phone', 'Contact Phone'),
+        ('email', 'Email'),
+        ('id', 'SC Contact ID'),
+        ('status', 'Contact Status'),
+        ('comments', 'Comments')
+    ))
+
+    def __init__(self):
+        super().__init__()
+        self._parser = ContactFileParser(keys=self.fields.keys())
+
+    def get_data(self, data: list) -> list:
+        result = []
         for row in data:
-            for k, v in self._file_parser.fields.items():
-                for row_k, row_v in row.items():
-                    if row_k == v:
-                        new_row[k] = row_v
-            new_data.append(new_row)
-        return new_data
+            data = self._parser.export_data(row.get('environments'))
+            result.extend(data)
+        return result
 
-    def get_data(self, data):
-        self.parse(data)
-        # print(self.result)
-        # for row in self.result:
-        #     print(row)
-        #     self._schema.load(row)
 
-        return self.result
+class MasterUsersBuilder(DefaultBuilder):
 
-    def parse(self, data):
-        updated_key_data = self.set_correct_keys(data)
-        for row in updated_key_data:
-            self._parse_row(row)
+    file_name = 'AppSearchContactExport_*_Master'
 
-    def _parse_row(self, data):
-        master = self._parse_master(data)
-        envs = self._parse_envs(data)
-        parent = self.check_parents(master)
-        if parent:
-            parent['environments'].append(envs)
-        else:
-            master['environments'] = [envs]
-            self.result.append(master)
+    fields = OrderedDict((
+        ('master_ciid', 'CIID'),
+        ('application', 'Application Name'),
+        ('user_name', 'Contact  Name'),
+        ('type', 'CI Contact Type'),
+        ('phone', 'Contact Phone'),
+        ('email', 'Email'),
+        ('id', 'SC Contact ID'),
+        ('status', 'Contact Status'),
+        ('comments', 'Comments')
+    ))
 
-    def _parse_master(self, data):
-        master_keys = self._schema.declared_fields.keys()
-        master_data = self._parse(data, master_keys)
-        master = self._schema.load(master_data)
-        return master
+    def __init__(self):
+        super().__init__()
+        self._parser = ContactFileParser(keys=self.fields.keys())
 
-    def _parse_envs(self, envs):
-        env_fields = self._schema.declared_fields['environments'].nested._declared_fields
-        env_keys = env_fields.keys()
-        risk_profile_keys = env_fields['risk_profile'].nested._declared_fields.keys()
-        security_keys = env_fields['security'].nested._declared_fields.keys()
-        env_data = self._parse(envs, env_keys)
-        risk_profile = self._parse(envs, risk_profile_keys)
-        security = self._parse(envs, security_keys)
-        env_data['risk_profile'] = risk_profile
-        env_data['security'] = security
-        return env_data
 
-    def _parse(self, data, keys):
-        return {key: value for key, value in data.items() if key in keys}
+class CmdbDataBuilder(DefaultBuilder):
 
-    def check_parents(self, row):
-        for i, item in enumerate(self.result):
-            if item['master_ciid'] == row['master_ciid']:
-                return item
-        return None
+    file_name = 'cmdb-sample-download'
+
+    fields = OrderedDict((
+        ('ciid', 'CIID'),
+        ('master_ciid', 'Master CI ID'),
+        ('application', 'Application Name'),
+        ('name', 'Deployment Name'),
+        ('description', 'Deployment Description'),
+        ('status', 'Status'),
+        ('env_type', 'Env. Type'),
+        ('app_deployment_type', 'Application Deployment Type'),
+        ('location', 'Location'),
+        ('org_level_1', 'Org Level 1'),
+        ('org_level_2', 'Org Level 2'),
+        ('org_level_3', 'Org Level 3'),
+        ('business_critical', 'Business Critical'),
+        ('iprm_id', 'IPRM Questionnaire ID'),
+        ('cpr_type', 'CRP Type'),
+        ('compliance_rating_status', 'Compliance Rating Status'),
+        ('sdlc_path', 'SDLC Path'),
+        ('dr_rto_tier', 'DR/RTO Tier'),
+        ('sox_value', 'SOX Value'),
+        ('gxp', 'GxP?'),
+        ('gcp', 'GCP?'),
+        ('gdp', 'GDP?'),
+        ('glp', 'GLP?'),
+        ('gmp', 'GMP?'),
+        ('gpvp', 'GPvP?'),
+        ('eea_pi_spi', 'EEA PI/SPI'),
+        ('ma201', 'MA 201'),
+        ('sales', 'Sales'),
+        ('aca', 'ACA'),
+        ('smd', 'SMD'),
+        ('data_class', 'Data Classification'),
+        ('cybersecurity_protection_level', 'Cybersecurity Protection Level'),
+        ('access', 'Access?'),
+        ('detect', 'Detect?'),
+        ('identify', 'Identify?'),
+        ('prevent', 'Prevent?'),
+        ('response', 'Response?'),
+        ('regional', 'Regional'),
+        ('globals', 'Global'),
+        ('is_auth', 'I&AM Authentication'),
+        ('used_in_lab', 'Used in Lab?'),
+        ('ci_mgmt_group', 'CI Mgmt Group'),
+        ('under_change_mgmt', 'Under Change Mgmt?'),
+        ('sla_support_id', 'SLA Support ID'),
+        ('primary_url', 'Primary URL'),
+        ('key_used_periods', 'Key Use Periods'),
+        ('app_externally_accessible', 'Application Externally Accessible'),
+        ('externally_hosted_app', 'Externally Hosted Application'),
+        ('country_solution_hosted_in', 'Country Solution Hosted In'),
+        ('hosting_vendor', 'Hosting Vendor'),
+        ('daily_monitoring_site', 'Daily Monitoring of Site'),
+        ('cookies_stored', 'Cookies Stored?'),
+        ('customer_into_stored', 'Customer Info Stored?'),
+    ))
+
+    def __init__(self):
+        super().__init__()
+        self._parser = CmdbDataFileParser(keys=self.fields.keys())

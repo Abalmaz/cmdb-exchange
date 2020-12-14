@@ -9,20 +9,20 @@ class PersonTypeSchema(Schema):
 class PersonSchema(Schema):
     user_name = fields.Str()
     phone = fields.Str()
-    email = fields.Email()
+    email = fields.Str()
     id = fields.Str()
     status = fields.Str()
     comments = fields.Str()
-    type = fields.Nested(PersonTypeSchema)
+    type = fields.Str()
 
 
 class SecuritySchema(Schema):
-    cybersecurity_protection_level = fields.Str(skip_if=None)
-    access = fields.Bool(skip_if='')
-    detect = fields.Bool(skip_if='')
-    identify = fields.Bool(skip_if='')
-    prevent = fields.Bool(skip_if='')
-    response = fields.Bool(skip_if='')
+    cybersecurity_protection_level = fields.Str()
+    access = fields.Bool()
+    detect = fields.Bool()
+    identify = fields.Bool()
+    prevent = fields.Bool()
+    response = fields.Bool()
 
 
 class RiskProfileSchema(Schema):
@@ -78,7 +78,7 @@ class EnvironmentSchema(Schema):
     ci_mgmt_group = fields.Str()
     under_change_mgmt = fields.Bool()
     sla_support_id = fields.Str()
-    primary_url = fields.Url()
+    primary_url = fields.Str()
     key_used_periods = fields.Str()
     app_externally_accessible = fields.Bool()
     externally_hosted_app = fields.Bool()
@@ -87,8 +87,8 @@ class EnvironmentSchema(Schema):
     daily_monitoring_site = fields.Str()
     cookies_stored = fields.Bool()
     customer_into_stored = fields.Bool()
-    risk_profile = fields.Nested(RiskProfileSchema)
-    security = fields.Nested(SecuritySchema)
+    risk_profile = fields.Nested(RiskProfileSchema, allow_none=True)
+    security = fields.Nested(SecuritySchema, allow_none=True)
     users = fields.Nested(PersonSchema, many=True)
 
     @pre_load
