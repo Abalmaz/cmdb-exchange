@@ -12,8 +12,8 @@ def get_file_by_name_pattern(path: str, pattern: str) -> str:
     path = concatenate_path(path, pattern)
     file = glob.glob(path)
     if not file:
-        raise IOError("File not found")
+        raise OSError("File not found")
     elif len(file) > 1:
-        raise IOError("More than one file was found")
+        raise OSError("More than one file was found")
     else:
         return file[0]

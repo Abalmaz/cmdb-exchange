@@ -60,7 +60,7 @@ class RiskProfileSchema(Schema):
         return data
 
     @validates_schema
-    def validate_sox_value(self, data, **kwargs):
+    def validate_gxp_value(self, data, **kwargs):
         if data["sdlc_path"] == "Validation" and data["gxp"] is False:
             raise ValidationError("If 'SDLC path' is 'Validation' 'GxP' must be True")
 
@@ -129,7 +129,7 @@ class EnvironmentSchema(Schema):
 
     @pre_load
     def set_business_critical(self, data, **kwargs):
-        if data.get('business_critical') in ('', ):
+        if data.get('business_critical') == '':
             data['business_critical'] = True
         return data
 

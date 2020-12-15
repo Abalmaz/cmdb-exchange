@@ -135,8 +135,12 @@ class CmdbDataFileParser(BaseFileParser):
 
     def _export_env(self, env: dict) -> dict:
         env_data = self._parse(env, self.keys)
-        env_data.update(self._parse(env.get("risk_profile"), self.keys))
-        env_data.update(self._parse(env.get('security'), self.keys))
+        risk_profile = env.get("risk_profile")
+        security = env.get('security')
+        if risk_profile:
+            env_data.update(self._parse(risk_profile, self.keys))
+        if security:
+            env_data.update(self._parse(security, self.keys))
         return env_data
 
     def _parse_master(self, data: list) -> List[dict]:

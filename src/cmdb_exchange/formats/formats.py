@@ -5,9 +5,6 @@ from typing import Any, TextIO, Optional, Sequence, Mapping
 
 class Format:
 
-    def get_column_name(self, data):
-        raise NotImplementedError
-
     @classmethod
     def get_data(cls, data):
         raise NotImplementedError
@@ -21,12 +18,6 @@ class CSVFormat(Format):
 
     title = 'csv'
     extensions = ('csv',)
-
-    @classmethod
-    def get_column_name(cls, steam: TextIO) -> Optional[Sequence[str]]:
-        csvreader = csv.DictReader(steam)
-        headers = csvreader.fieldnames
-        return headers
 
     @classmethod
     def get_data(cls, steam: TextIO) -> list:

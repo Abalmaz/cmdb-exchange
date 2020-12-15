@@ -10,10 +10,6 @@ Output formats supported:
 1. Download source code from gitlab
 2. Install requirements from `requirements.txt` file
 
-### Usage: Python Module
-
-> import cmdb_exchange
-
 ### Exporting data
 
 1. Сreate an exporter object with an extension and the necessary builder as parameters

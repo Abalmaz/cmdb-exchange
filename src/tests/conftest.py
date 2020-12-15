@@ -1,68 +1,4 @@
 import pytest
-from marshmallow import Schema, fields
-
-
-@pytest.fixture()
-def nested_data():
-    return [{
-        'master_id': 123,
-        'environments': [
-            {'id': 111, 'name': 'Web Server', 'status': 'Run',
-             'risk_profile_data': {'GxP': True}},
-            {'id': 112, 'name': 'Web Server', 'status': 'New',
-             'risk_profile_data': {'GxP': True}},
-            {'id': 113, 'name': 'Web Server', 'status': 'Run',
-             'risk_profile_data': {'GxP': False}}
-        ]
-    },
-        {
-            'master_id': 456,
-            'environments': [
-                {'id': 211, 'name': 'Mobile app', 'status': 'Build',
-                 'risk_profile_data': {'GxP': True}},
-                {'id': 212, 'name': 'Mobile app', 'status': 'Run',
-                 'risk_profile_data': {'GxP': True}},
-                {'id': 213, 'name': 'Mobile app', 'status': 'Run',
-                 'risk_profile_data': {'GxP': True}}
-            ]
-        }
-    ]
-
-
-@pytest.fixture()
-def schema():
-    class TestSchemaRiskProfile(Schema):
-        iprm_id = fields.Str()
-        sdlc_path = fields.Str()
-        soc_value = fields.Bool()
-        gxp = fields.Bool()
-
-    class TestSchemaEnvironments(Schema):
-        ciid = fields.String()
-        deployment_name = fields.Str()
-        description = fields.Str()
-        status = fields.Str()
-        env_type = fields.Str()
-        url = fields.Str()
-        risk_profile = fields.Nested(TestSchemaRiskProfile)
-
-    class TestSchemaMaster(Schema):
-        master_ciid = fields.Str()
-        application = fields.Str()
-        environments = fields.Nested(TestSchemaEnvironments)
-
-    return TestSchemaMaster()
-
-
-@pytest.fixture(scope="session")
-def csv_upload_file(tmpdir_factory):
-    csv_file = tmpdir_factory.mktemp('mydir').join('test_upload.csv')
-    csv_data = '''master_ciid,application,ciid,deployment_name,description,status,env_type,url,iprm_id,sdlc_path,soc_value,gxp
-SC2265886,PRODUCT WEBSITE: CALTRATE,SC2550040,PRODUCT WEBSITE: CALTRATE (CONSUMER)',"CALTRATE.COM IS TRANSITIIOND TO DRUPAL PLATFORM, HOSTED EXTERNALLY BY VERIZON",Run,Staging,http://stg.caltrate.pfizer.com,3275727,Baseline,True,True
-SC2465284,EXTERNAL WEBSITE: QUITWITHHELP,SC2747583,EXTERNAL WEBSITE: QUITWITHHELP (BIOPHARMA),External website,Run,Prodaction,arreterdefumeravecaide.be,3275727,Baseline,True,True
-SC2265886,PRODUCT WEBSITE: CALTRATE,SC2630860,PRODUCT WEBSITE: WEBINARS (DIGITAL),New website for Webinars,New,Development,webinar,3275727,Baseline,True,True'''
-    csv_file.write(csv_data)
-    return csv_file
 
 
 @pytest.fixture()
@@ -96,15 +32,7 @@ def python_nested_data():
          'daily_monitoring_site': '',
          'cookies_stored': False,
          'customer_into_stored': False,
-         'security': {
-             'cybersecurity_protection_level': '',
-             'access': '',
-             'detect': '',
-             'identify': '',
-             'prevent': '',
-             'response': ''
-
-         },
+         'security': None,
          'users': [
              {
                  'user_name': 'JAULIKAR, DILAWAR M',
@@ -113,7 +41,7 @@ def python_nested_data():
                  'id': 'SC213359',
                  'status': 'Active',
                  'comments': '',
-                 'type': {'type': 'APPLICATION SUPPORT OWNER'}
+                 'type': 'APPLICATION SUPPORT OWNER'
              },
              {
                  'user_name': 'JENSEN, KENT',
@@ -122,7 +50,7 @@ def python_nested_data():
                  'id': 'SC2038363',
                  'status': 'Active',
                  'comments': '',
-                 'type': {'type': 'APPLICATION SUPPORT - PRIMARY'}
+                 'type': 'APPLICATION SUPPORT - PRIMARY'
              },
 {
                  'user_name': 'JENSEN, KENT',
@@ -131,32 +59,10 @@ def python_nested_data():
                  'id': 'SC2038363',
                  'status': 'Active',
                  'comments': '',
-                 'type': {'type': 'APPLICATION SUPPORT LEAD'}
+                 'type': 'APPLICATION SUPPORT LEAD'
              }
          ],
-         'risk_profile': {
-             'iprm_id': '',
-             'cpr_type': '',
-             'compliance_rating_status': '',
-             'sdlc_path': '',
-             'dr_rto_tier': '',
-             'sox_value': '',
-             'gxp': '',
-             'gcp': '',
-             'gdp': '',
-             'glp': '',
-             'gmp': '',
-             'gpvp': '',
-             'eea_pi_spi': '',
-             'ma201': '',
-             'sales': '',
-             'aca': '',
-             'smd': '',
-             'data_class': '',
-             'regional': '',
-             'globals': '',
-             'is_auth': ''
-         }
+         'risk_profile': None
          },
     {
         'ciid': 'SC2865392',
@@ -180,15 +86,7 @@ def python_nested_data():
          'daily_monitoring_site': '',
          'cookies_stored': False,
          'customer_into_stored': False,
-         'security': {
-             'cybersecurity_protection_level': '',
-             'access': '',
-             'detect': '',
-             'identify': '',
-             'prevent': '',
-             'response': ''
-
-         },
+         'security': None,
          'users': [
              {
                  'user_name': 'DL-BT-DIGITALMARKETING, DL',
@@ -197,7 +95,7 @@ def python_nested_data():
                  'id': 'SC2000222',
                  'status': 'Active',
                  'comments': '',
-                 'type': {'type': 'APPLICATION SUPPORT - PRIMARY'}
+                 'type': 'APPLICATION SUPPORT - PRIMARY'
              },
              {
                  'user_name': 'JAULIKAR, DILAWAR M',
@@ -206,11 +104,11 @@ def python_nested_data():
                  'id': 'SC213359',
                  'status': 'Active',
                  'comments': '',
-                 'type': {'type': 'APPLICATION SUPPORT OWNER'}
+                 'type': 'APPLICATION SUPPORT OWNER'
              }
          ],
          'risk_profile': {
-             'iprm_id': '3275727',
+             'iprm_id': 3275727,
              'cpr_type': 'Direct to Business',
              'compliance_rating_status': 'Confirmed',
              'sdlc_path': 'Baseline',
@@ -242,7 +140,7 @@ def python_nested_data():
             'id': 'SC1277180',
             'status': 'Active',
             'comments': '',
-            'type': {'type': 'BUSINESS APPLICATION OWNER'}
+            'type': 'BUSINESS APPLICATION OWNER'
         },
         {
             'user_name': 'JAULIKAR, DILAWAR M',
@@ -251,7 +149,7 @@ def python_nested_data():
             'id': 'SC213359',
             'status': 'Active',
             'comments': '',
-            'type': {'type': 'APPLICATION SUPPORT OWNER'}
+            'type': 'APPLICATION SUPPORT OWNER'
         },
         {
             'user_name': 'HOLDA, PAUL',
@@ -260,7 +158,7 @@ def python_nested_data():
             'id': 'SC1302458',
             'status': 'Inactive',
             'comments': '',
-            'type': {'type': 'BT APPLICATION STEWARD'}
+            'type': 'BT APPLICATION STEWARD'
         }
     ]
 }
@@ -269,7 +167,7 @@ def python_nested_data():
 
 @pytest.fixture(scope="session")
 def environment_users_csv_file(tmpdir_factory):
-    csv_file = tmpdir_factory.mktemp('mydir').join('ContactExportEnvironmentTest.csv')
+    csv_file = tmpdir_factory.mktemp('mydir').join('AppSearchContactExport_test_Environment.csv')
     csv_data = '''CIID,Application Name,Contact  Name,CI Contact Type,Contact Phone,Email,SC Contact ID,Contact Status,Comments
 SC2634359,PRODUCT WEBSITE: ADVIL.COM (CONSUMER) - 4.0 - AMER - STAGING - DRUPAL-US,"JAULIKAR, DILAWAR M",APPLICATION SUPPORT OWNER,908-901-1673,DILAWAR.M.JAULIKAR@PFIZER.COM,SC213359,Active,
 SC2634359,PRODUCT WEBSITE: ADVIL.COM (CONSUMER) - 4.0 - AMER - STAGING - DRUPAL-US,"JENSEN, KENT",APPLICATION SUPPORT - PRIMARY,UNKNOWN,KENT.JENSEN@PFIZER.COM,SC2038363,Active,
@@ -283,7 +181,7 @@ SC2865392,PRODUCT WEBSITE: ADVIL.COM (CONSUMER) - 1.0 - APAC - PRODUCTION - DRUP
 
 @pytest.fixture(scope="session")
 def master_users_csv_file(tmpdir_factory):
-    csv_file = tmpdir_factory.mktemp('mydir').join('ContactExportMasterTest.csv')
+    csv_file = tmpdir_factory.mktemp('mydir').join('AppSearchContactExport_test_Master.csv')
     csv_data = '''CIID,Application Name,Contact  Name,CI Contact Type,Contact Phone,Email,SC Contact ID,Contact Status,Comments
 SC2265892,PRODUCT WEBSITE: ADVIL.COM,"FOX, BRETT S",BUSINESS APPLICATION OWNER,+1.484.865.3628,BRETT.FOX@PFIZER.COM,SC1277180,Active,
 SC2265892,PRODUCT WEBSITE: ADVIL.COM,"JAULIKAR, DILAWAR M",APPLICATION SUPPORT OWNER,908-901-1673,DILAWAR.M.JAULIKAR@PFIZER.COM,SC213359,Active,
@@ -295,7 +193,7 @@ SC2265892,PRODUCT WEBSITE: ADVIL.COM,"HOLDA, PAUL",BT APPLICATION STEWARD,+1 (97
 
 @pytest.fixture(scope="session")
 def cmdb_data_csv_file(tmpdir_factory):
-    csv_file = tmpdir_factory.mktemp('mydir').join('CmdbDataTest.csv')
+    csv_file = tmpdir_factory.mktemp('mydir').join('cmdb-sample-download.csv')
     csv_data = '''CIID,Master CI ID,Application Name,Deployment Name,Deployment Description,Status,Env. Type,Application Deployment Type,Location,Org Level 1,Org Level 2,Org Level 3,Business Critical,IPRM Questionnaire ID,CRP Type,Compliance Rating Status,SDLC Path,DR/RTO Tier,SOX Value,GxP?,GCP?,GDP?,GLP?,GMP?,GPvP?,EEA PI/SPI,MA 201,Sales,ACA,SMD,Data Classification,Cybersecurity Protection Level,Access?,Detect?,Identify?,Prevent?,Response?,Regional,Global,I&AM Authentication,Used in Lab?,CI Mgmt Group,Under Change Mgmt?,SLA Support ID,Primary URL,Key Use Periods,Application Externally Accessible,Externally Hosted Application,Country Solution Hosted In,Hosting Vendor,Daily Monitoring of Site,Cookies Stored?,Customer Info Stored?
 SC2634359,SC2265892,PRODUCT WEBSITE: ADVIL.COM,PRODUCT WEBSITE: ADVIL.COM (CONSUMER) - 4.0 - AMER - STAGING - DRUPAL-US,Internet Website,Run,Staging,Web Site,AMER,CONSUMER,DSE,DAIA - Digital Services,False,,,,,,,,,,,,,,,,,,,,,,,,,,,,False,GBL-BT-DIGITAL MARKETING,False,,acrfb.advil.com,,True,False,,ACQUIA,,False,False
 SC2865392,SC2265892,PRODUCT WEBSITE: ADVIL.COM,PRODUCT WEBSITE: ADVIL.COM (CONSUMER) - 1.0 - APAC - PRODUCTION - DRUPAL-PH,Internet Website,Run,Production,Web Site,APAC,CONSUMER,DSE,DAIA - Digital Services,False,3275727,Direct to Business,Confirmed,Baseline,Tier 4,False,False,False,False,False,False,False,False,False,False,False,False,,,,,,,,False,False,Unknown,False,GBL-BT-DIGITAL MARKETING,False,,advil.com.ph,,True,True,PHILIPPINES,ACQUIA,,False,False
