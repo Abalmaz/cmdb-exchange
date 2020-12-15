@@ -80,7 +80,7 @@ class Exporter:
     def get_file_name(self, path: str) -> str:
         return f'{path}/{self._builder.generate_filename()}.{self._format.title}'
 
-    def export(self, path: str,  data: list) -> None:
+    def export(self, path: str, data: list) -> None:
         """
         The main method which creates a file with data and saves it in a given folder.
 

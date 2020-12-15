@@ -1,5 +1,3 @@
-from pprint import pprint
-
 from src.cmdb_exchange.cmdb import CmdbExchange
 from src.cmdb_exchange.schemas import MasterSchema
 
@@ -13,6 +11,3 @@ from src.cmdb_exchange.schemas import MasterSchema
 '''
 importer = CmdbExchange.create_importer('csv', MasterSchema())
 data = importer.import_data('/home/user/Downloads')
-for item in data:
-    if item.get('master_ciid') == 'SC2721302':
-        pprint(item)
