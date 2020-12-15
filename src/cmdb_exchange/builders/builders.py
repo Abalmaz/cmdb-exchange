@@ -6,14 +6,26 @@ from src.cmdb_exchange.builders.parsers import FlatDataParser, \
     CmdbDataFileParser, ContactFileParser
 
 
-class DefaultBuilder:
+class BaseBuilder:
+    """
+    The base class specifies methods for creating a file and get information from it.
+    """
 
     @property
     def file_name(self):
+        """
+        File name required parameter. If the file name contains a variable part, for example date,
+        then replace this part with '*'. For example if the filename is 'Export_20201210',
+        then specify 'Export_*'.
+        """
         raise NotImplementedError
 
     @property
     def fields(self):
+        """
+        A dictionary that contains the name of the model field as a key and
+        the corresponding header in the file as a value.
+        """
         raise NotImplementedError
 
     def __init__(self):
@@ -24,6 +36,13 @@ class DefaultBuilder:
         return self._parser.export_data(data)
 
     def set_fields_name(self, data: dict) -> dict:
+        """
+        Takes a data dictionary from a file and replaces the headers with their
+        corresponding keys from 'fields'
+
+        :param data: dict. Dictionary with keys given from file
+        :return: dict. Dictionary with keys corresponding the model fields
+        """
         new_row = {}
         for k, v in self.fields.items():
             for row_k, row_v in data.items():
@@ -32,22 +51,39 @@ class DefaultBuilder:
         return new_row
 
     def export_data(self, data: list) -> Union[list, List[dict]]:
+        """
+        Extracts the fields from the received object that needs to create the file.
+        Flattens a dictionary with the nested structure to a dictionary with no hierarchy.
+
+        :param data: list. List of dict with full information
+        :return: list. List of dict with prepared to export data
+        """
         nested_data = self.get_data(data)
         for row in nested_data:
             self._flatten.visit(row)
         return self._flatten.result
 
     def import_data(self, data: list) -> Any:
+        """
+        Replaces headers in the data read from the file with the corresponding keys
+        and parses the necessary data using '_parser'
+        :param data: list. List of data read from file
+        :return: dict.
+        """
         for i, row in enumerate(data):
             data[i] = self.set_fields_name(row)
         return self._parser.import_data(data)
 
     def generate_filename(self) -> str:
+        """
+        Replacing a '*' symbol from 'file_name' to current date in "YYYYMMDD" format.
+        :return: str. Filename with current date
+        """
         today = date.today()
         return self.file_name.replace('*', today.strftime('%Y%m%d'))
 
 
-class EnvironmentUsersBuilder(DefaultBuilder):
+class EnvironmentUsersBuilder(BaseBuilder):
 
     file_name = 'AppSearchContactExport_*_Environment'
 
@@ -75,7 +111,7 @@ class EnvironmentUsersBuilder(DefaultBuilder):
         return result
 
 
-class MasterUsersBuilder(DefaultBuilder):
+class MasterUsersBuilder(BaseBuilder):
 
     file_name = 'AppSearchContactExport_*_Master'
 
@@ -96,7 +132,7 @@ class MasterUsersBuilder(DefaultBuilder):
         self._parser = ContactFileParser(keys=self.fields.keys())
 
 
-class CmdbDataBuilder(DefaultBuilder):
+class CmdbDataBuilder(BaseBuilder):
 
     file_name = 'cmdb-sample-download'
 

@@ -19,6 +19,10 @@ class Parser:
 
 
 class FlatDataParser(Parser):
+    """
+    Flattens a dictionary with nested structure to a dictionary with no
+    hierarchy
+    """
 
     def __init__(self):
         self._collected_info = {}
@@ -51,14 +55,30 @@ class FlatDataParser(Parser):
 
 
 class BaseFileParser:
+    """
+    The base class specifies methods for read/write file
+    """
 
     def import_data(self, data):
+        """
+        Parses data read from a file and creates necessary python objects from them.
+        """
         raise NotImplementedError
 
     def _export_row(self, data):
+        """
+        Parses dictionary with cmdb item data, and get from it needed data to create file
+        :param data:
+        :return:
+        """
         raise NotImplementedError
 
     def export_data(self, data: list) -> list:
+        """
+        Reads a given list of cmdb item objects by one and prepare it to export
+        :param data:
+        :return:
+        """
         result = []
         for row in data:
             result.append(self._export_row(row))
@@ -66,6 +86,13 @@ class BaseFileParser:
 
     @staticmethod
     def _parse(data: dict, keys: list) -> dict:
+        """
+        Returns a new dictionary contain only certain keys.
+
+        :param data: dict. Dict that has a whole bunch of entries
+        :param keys: list. List of keys for filtering
+        :return: dict
+        """
         return {key: value for key, value in data.items() if key in keys}
 
 
@@ -82,8 +109,9 @@ class ContactFileParser(BaseFileParser):
 
     def _parse_user(self, data: dict) -> dict:
         user_data = self._parse(data, Person.get_keys())
-        user = Person(**user_data)
-        return dataclasses.asdict(user)
+        if user_data:
+            user = Person(**user_data)
+            return dataclasses.asdict(user)
 
     def import_data(self, data: list) -> defaultdict:
         result = defaultdict(list)
@@ -137,7 +165,7 @@ class CmdbDataFileParser(BaseFileParser):
 
     def _parse_risk_profile(self, data: dict) -> [RiskProfile, None]:
         risk_profile_data = self._parse(data, RiskProfile.get_keys())
-        if not any(risk_profile_data.values()):
+        if not risk_profile_data.get('iprm_id'):
             return None
         return RiskProfile(**risk_profile_data)
 

@@ -37,12 +37,12 @@ class RiskProfileSchema(Schema):
     gdp = fields.Bool()
     glp = fields.Bool()
     gmp = fields.Bool()
-    gpvp = fields.Bool()
-    eea_pi_spi = fields.Bool()
-    ma201 = fields.Bool()
-    sales = fields.Bool()
-    aca = fields.Bool()
-    smd = fields.Bool()
+    gpvp = fields.Boolean()
+    eea_pi_spi = fields.Boolean()
+    ma201 = fields.Boolean()
+    sales = fields.Boolean()
+    aca = fields.Boolean()
+    smd = fields.Boolean()
     data_class = fields.Str()
     regional = fields.Bool()
     globals = fields.Bool()
@@ -61,40 +61,106 @@ class RiskProfileSchema(Schema):
 
     @validates_schema
     def validate_sox_value(self, data, **kwargs):
-        if data["sdlc_path"] == "Validation" and data["sox_value"] is False:
-            raise ValidationError("If 'SDLC path' is 'Validation' 'Sox value' must be True")
+        if data["sdlc_path"] == "Validation" and data["gxp"] is False:
+            raise ValidationError("If 'SDLC path' is 'Validation' 'GxP' must be True")
+
+    @pre_load
+    def set_gpvp(self, data, **kwargs):
+        if data.get('gpvp') == '':
+            data.pop('gpvp', None)
+        return data
+
+    @pre_load
+    def set_ma201(self, data, **kwargs):
+        if data.get('ma201') == '':
+            data.pop('ma201', None)
+        return data
+
+    @pre_load
+    def set_sales(self, data, **kwargs):
+        if data.get('sales') == '':
+            data.pop('sales', None)
+        return data
+
+    @pre_load
+    def set_aca(self, data, **kwargs):
+        if data.get('aca') == '':
+            data.pop('aca', None)
+        return data
+
+    @pre_load
+    def set_smd(self, data, **kwargs):
+        if data.get('smd') == '':
+            data.pop('smd', None)
+        return data
+
+    @pre_load
+    def set_eea_pi_spi(self, data, **kwargs):
+        if data.get('eea_pi_spi') == '':
+            data.pop('eea_pi_spi', None)
+        return data
 
 
 class EnvironmentSchema(Schema):
     ciid = fields.Str()
     name = fields.Str()
     description = fields.Str()
-    status = fields.Str(validate=validate.OneOf(["New", "Build", "Run", "Decommisioned"]))
+    status = fields.Str(validate=validate.OneOf(["New", "Build", "Run", "Decommissioned"]))
     env_type = fields.Str()
     app_deployment_type = fields.Str()
     location = fields.Str()
     business_critical = fields.Bool()
-    used_in_lab = fields.Bool()
+    used_in_lab = fields.Boolean()
     ci_mgmt_group = fields.Str()
-    under_change_mgmt = fields.Bool()
+    under_change_mgmt = fields.Boolean()
     sla_support_id = fields.Str()
     primary_url = fields.Str()
     key_used_periods = fields.Str()
-    app_externally_accessible = fields.Bool()
-    externally_hosted_app = fields.Bool()
+    app_externally_accessible = fields.Boolean()
+    externally_hosted_app = fields.Boolean()
     country_solution_hosted_in = fields.Str()
     hosting_vendor = fields.Str()
     daily_monitoring_site = fields.Str()
-    cookies_stored = fields.Bool()
-    customer_into_stored = fields.Bool()
+    cookies_stored = fields.Boolean()
+    customer_into_stored = fields.Boolean()
     risk_profile = fields.Nested(RiskProfileSchema, allow_none=True)
     security = fields.Nested(SecuritySchema, allow_none=True)
-    users = fields.Nested(PersonSchema, many=True)
+    users = fields.Nested(PersonSchema, many=True, allow_none=True)
 
     @pre_load
     def set_business_critical(self, data, **kwargs):
-        if data['business_critical'] == '':
+        if data.get('business_critical') in ('', ):
             data['business_critical'] = True
+        return data
+
+    @pre_load
+    def set_used_in_lab(self, data, **kwargs):
+        if data.get('used_in_lab') == '':
+            data.pop('used_in_lab', None)
+        return data
+
+    @pre_load
+    def set_cookies_stored(self, data, **kwargs):
+        if data.get('cookies_stored') == '':
+            data.pop('cookies_stored', None)
+        return data
+
+    @pre_load
+    def set_customer_into_stored(self, data, **kwargs):
+        if data.get('customer_into_stored') == '':
+            data.pop('customer_into_stored', None)
+        return data
+
+    @pre_load
+    def set_externally_hosted_app(self, data, **kwargs):
+        if data.get('externally_hosted_app') == '':
+            data.pop('externally_hosted_app', None)
+        return data
+
+    @pre_load
+    def set_under_change_mgmt(self, data, **kwargs):
+        if data.get('under_change_mgmt') == '':
+            data.pop('under_change_mgmt', None)
         return data
 
 
@@ -105,4 +171,4 @@ class MasterSchema(Schema):
     org_level_2 = fields.Str()
     org_level_3 = fields.Str()
     environments = fields.Nested(EnvironmentSchema, many=True)
-    users = fields.Nested(PersonSchema, many=True)
+    users = fields.Nested(PersonSchema, many=True, allow_none=True)

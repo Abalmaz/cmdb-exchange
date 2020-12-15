@@ -19,11 +19,11 @@ class PersonType(Base):
 class Person(Base):
     id: str
     user_name: str
-    phone: str
     email: str
     status: str
-    comments: str
     type: PersonType
+    phone: str = None
+    comments: str = None
 
 
 @dataclass
@@ -74,19 +74,21 @@ class Environment(Base):
     used_in_lab: bool
     ci_mgmt_group: str
     under_change_mgmt: bool
-    sla_support_id: str
     primary_url: str
     key_used_periods: str
     app_externally_accessible: str
-    externally_hosted_app: bool
     country_solution_hosted_in: str
     hosting_vendor: str
+    sla_support_id: str
+    externally_hosted_app: bool
+    country_solution_hosted_in: str
     daily_monitoring_site: str
     cookies_stored: bool
     customer_into_stored: bool
     risk_profile: RiskProfile
     security: Security
     users: List[Person] = field(default_factory=list)
+
 
 @dataclass
 class CmdbItem(Base):
